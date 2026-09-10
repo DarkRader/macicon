@@ -8,7 +8,7 @@ version = "0.1.0"
 description = "Generate, customize, and apply Apple continuous-curvature squircle app icons on macOS"
 readme = "README.md"
 license = "MIT"
-requires-python = ">=3.9"
+requires-python = ">=3.12"
 authors = [
     { name = "Artem Kuznetsov", email = "artyom.20century@gmail.com" }
 ]
@@ -30,9 +30,6 @@ classifiers = [
     "License :: OSI Approved :: MIT License",
     "Operating System :: MacOS",
     "Programming Language :: Python :: 3",
-    "Programming Language :: Python :: 3.9",
-    "Programming Language :: Python :: 3.10",
-    "Programming Language :: Python :: 3.11",
     "Programming Language :: Python :: 3.12",
     "Programming Language :: Python :: 3.13",
     "Topic :: Desktop Environment",
@@ -48,4 +45,24 @@ macicon = "macicon.cli:main"
 dev = [
     "pytest>=8.0.0",
     "ruff>=0.4.0",
+]
+
+[tool.ruff]
+target-version = "py312"
+line-length = 120
+
+[tool.ruff.lint]
+select = [
+    "E",
+    "F",
+    "W",
+    "I",
+    "B",
+    "C4",
+    "UP",
+    "RUF",
+    "SIM",
+]
+ignore = [
+    "E501",  # Line length (SVG paths and markup)
 ]

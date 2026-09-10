@@ -124,7 +124,7 @@ def is_color_dark(hex_color: str) -> bool:
     except ValueError:
         return False
 
-def compute_styling(theme: str, bg: str = None, color: str = None, border_color: str = None):
+def compute_styling(theme: str, bg: str | None = None, color: str | None = None, border_color: str | None = None):
     """Resolves background gradient, border color, and symbol color."""
     preset = THEME_PRESETS.get(theme, THEME_PRESETS["light"])
     bg_top = preset["bg_top"]
@@ -150,24 +150,18 @@ def compute_styling(theme: str, bg: str = None, color: str = None, border_color:
         border = border_color
     else:
         if is_color_dark(bg_top) or is_color_dark(bg_bottom):
-            if bg_top.lower() in ("#161618", "#000000", "#0d0d0e") or theme == "black":
-                border = "#28282C"
-            else:
-                border = "#3A3B40"
+            border = "#28282C" if bg_top.lower() in ("#161618", "#000000", "#0d0d0e") or theme == "black" else "#3A3B40"
         elif bg and bg_top == bg_bottom:
             border = bg_top
 
     if color:
         raw_color = color.strip()
         lowered = raw_color.lower()
-        if lowered in SYMBOL_SHORTCUTS:
-            symbol_color = SYMBOL_SHORTCUTS[lowered]
-        else:
-            symbol_color = raw_color
+        symbol_color = SYMBOL_SHORTCUTS.get(lowered, raw_color)
 
     return bg_top, bg_bottom, border, symbol_color
 
-def get_icons_base_dir(custom_path: str = None) -> str:
+def get_icons_base_dir(custom_path: str | None = None) -> str:
     """Resolves base directory for icons and themes manifest."""
     if custom_path:
         return os.path.abspath(os.path.expanduser(custom_path))
@@ -188,9 +182,9 @@ def load_themes_manifest(manifest_path: str, icons_base_dir: str) -> dict:
     data = {}
     if os.path.isfile(manifest_path):
         try:
-            with open(manifest_path, "r", encoding="utf-8") as f:
+            with open(manifest_path, encoding="utf-8") as f:
                 data = json.load(f)
-        except Exception:
+        except (OSError, json.JSONDecodeError):
             data = {}
 
     if "light" not in data and os.path.isdir(os.path.join(icons_base_dir, "light")):
@@ -220,5 +214,5 @@ def save_themes_manifest(manifest_path: str, data: dict):
         with open(manifest_path, "w", encoding="utf-8") as f:
             json.dump(data, f, indent=2)
             f.write("\n")
-    except Exception as e:
+    except OSError as e:
         print(f"Warning: Could not save themes manifest to {manifest_path}: {e}", file=sys.stderr)

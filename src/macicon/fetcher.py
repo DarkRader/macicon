@@ -6,7 +6,9 @@ import sys
 import urllib.error
 import urllib.parse
 import urllib.request
+
 from .constants import COMMON_ALIASES, KNOWN_ICONS
+
 
 def extract_path_from_svg(svg_content: str):
     """Extracts combined <path d='...'>, viewBox, and fill-rule from SVG markup."""
@@ -16,10 +18,7 @@ def extract_path_from_svg(svg_content: str):
     else:
         w_match = re.search(r'<svg[^>]*\bwidth=["\']([0-9.]+)["\']', svg_content)
         h_match = re.search(r'<svg[^>]*\bheight=["\']([0-9.]+)["\']', svg_content)
-        if w_match and h_match:
-            viewbox = f"0 0 {w_match.group(1)} {h_match.group(1)}"
-        else:
-            viewbox = "0 0 24 24"
+        viewbox = f"0 0 {w_match.group(1)} {h_match.group(1)}" if w_match and h_match else "0 0 24 24"
 
     fr_match = re.search(r'\bfill-rule=["\']([^"\']+)["\']', svg_content)
     fill_rule = fr_match.group(1) if fr_match else "evenodd"
@@ -34,11 +33,11 @@ def fetch_icon_or_create(query: str, fallback_letter: bool = False) -> dict:
     query_str = query.strip()
 
     # Direct URL or simpleicons query link
-    if query_str.startswith("http://") or query_str.startswith("https://"):
+    if query_str.startswith(("http://", "https://")):
         parsed = urllib.parse.urlparse(query_str)
         qs = urllib.parse.parse_qs(parsed.query)
 
-        if "q" in qs and qs["q"]:
+        if qs.get("q"):
             query_str = qs["q"][0]
         elif parsed.path.endswith(".svg") or "cdn.simpleicons.org" in parsed.netloc or "jsdelivr.net" in parsed.netloc:
             try:
@@ -49,7 +48,7 @@ def fetch_icon_or_create(query: str, fallback_letter: bool = False) -> dict:
                     path_d, viewbox, fill_rule = extract_path_from_svg(content)
                     stem = os.path.splitext(os.path.basename(parsed.path))[0] or "custom"
                     return {"type": "path", "path_d": path_d, "viewbox": viewbox, "fill_rule": fill_rule, "name": stem}
-            except Exception as e:
+            except (urllib.error.URLError, TimeoutError, OSError, ValueError) as e:
                 sys.exit(f"Error fetching SVG from URL '{query_str}': {e}")
         else:
             path_parts = [p for p in parsed.path.split("/") if p and p != "icons"]

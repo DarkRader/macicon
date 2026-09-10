@@ -4,6 +4,7 @@ import os
 import subprocess
 import sys
 
+
 def apply_icon_to_app(app_path: str, icns_path: str, restart_dock: bool = True):
     """Applies .icns directly to a target .app bundle without breaking code signatures."""
     app_path = os.path.abspath(os.path.expanduser(app_path))

@@ -4,6 +4,7 @@ import os
 import shutil
 import subprocess
 import tempfile
+
 from .constants import (
     CANVAS_SIZE,
     CORNER_RADIUS,
@@ -12,6 +13,7 @@ from .constants import (
     TILE_X,
     TILE_Y,
 )
+
 
 def build_svg(path_d: str, viewbox: str, bg_top: str, bg_bottom: str, border: str, symbol_color, scale: float, fill_rule: str = "evenodd", shadow: bool = True) -> str:
     """Generates standard Apple HIG squircle SVG markup with embedded symbol."""
@@ -211,7 +213,7 @@ def compile_icns(masked_png: str, out_icns: str, temp_dir: str):
     subprocess.run(["iconutil", "-c", "icns", iconset_dir, "-o", out_icns], check=True)
     print(f"Compiled ICNS: {out_icns}")
 
-def generate_single_icon(icon_info: dict, out_icns: str, bg_top: str, bg_bottom: str, border: str, symbol_color, scale: float = 1.25, shadow: bool = True, preview_path: str = None) -> str:
+def generate_single_icon(icon_info: dict, out_icns: str, bg_top: str, bg_bottom: str, border: str, symbol_color, scale: float = 1.25, shadow: bool = True, preview_path: str | None = None) -> str:
     """Generates a complete squircle .icns package from vector info."""
     temp_dir = tempfile.mkdtemp(prefix="macicon_")
     try:

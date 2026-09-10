@@ -5,6 +5,7 @@ import os
 import shutil
 import subprocess
 import sys
+
 from .app_icon import apply_icon_to_app
 from .fetcher import extract_path_from_svg, fetch_icon_or_create
 from .renderer import generate_single_icon
@@ -15,6 +16,7 @@ from .themes import (
     load_themes_manifest,
     save_themes_manifest,
 )
+
 
 def parse_args():
     parser = argparse.ArgumentParser(
@@ -275,7 +277,7 @@ def handle_sync_themes(args):
     if not all_icon_names:
         sys.exit(f"Error: No .icns icons found across any themes in '{icons_base_dir}'.")
 
-    all_icons_list = sorted(list(all_icon_names))
+    all_icons_list = sorted(all_icon_names)
     print(f"\n🔄 Syncing {len(all_icons_list)} icons across {len(themes_data)} themes ({', '.join(themes_data.keys())})...\n")
 
     for theme_name, cfg in themes_data.items():
@@ -308,7 +310,7 @@ def handle_sync_themes(args):
                     print("✓")
                 except Exception as e:
                     print(f"✗ ({e})")
-    print(f"\n✨ All themes are now synchronized!\n")
+    print("\n✨ All themes are now synchronized!\n")
 
 def main():
     args = parse_args()
@@ -353,7 +355,7 @@ def main():
         icon_info = {"type": "letter", "letter": args.letter}
         base_name = f"letter-{args.letter.lower()}"
     elif args.svg:
-        with open(args.svg, "r", encoding="utf-8") as f:
+        with open(args.svg, encoding="utf-8") as f:
             svg_content = f.read()
         path_d, viewbox, fill_rule = extract_path_from_svg(svg_content)
         icon_info = {"type": "path", "path_d": path_d, "viewbox": viewbox, "fill_rule": fill_rule}
