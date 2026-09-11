@@ -1,6 +1,6 @@
 [package]
 name = "macicon"
-version = "0.1.1" # x-release-please-version
+version = "0.2.0" # x-release-please-version
 edition = "2024"
 rust-version = "1.98.1"
 description = "Generate, customize, and apply Apple continuous-curvature squircle app icons on macOS"
