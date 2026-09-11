@@ -1,0 +1,73 @@
+#!/usr/bin/env sh
+set -e
+
+echo "🔍 Running pre-commit checks..."
+
+# 1. check-added-large-files (max 500KB)
+MAX_BYTES=512000
+for file in $(git diff --cached --name-only --diff-filter=ACM); do
+  if [ -f "$file" ]; then
+    size=$(wc -c < "$file" | tr -d ' ')
+    if [ "$size" -gt "$MAX_BYTES" ]; then
+      echo "❌ Large file detected: $file ($size bytes > $MAX_BYTES limit)"
+      exit 1
+    fi
+  fi
+done
+echo "  ✓ check-added-large-files"
+
+# 2. trailing-whitespace (git native diff whitespace check)
+if ! git diff --cached --check; then
+  echo "❌ Trailing whitespace detected. Please remove trailing spaces."
+  exit 1
+fi
+echo "  ✓ trailing-whitespace"
+
+# 3. end-of-file-fixer (ensure text files end with newline)
+for file in $(git diff --cached --name-only --diff-filter=ACM); do
+  if [ -f "$file" ] && [ -s "$file" ]; then
+    last_char=$(tail -c 1 "$file")
+    if [ -n "$last_char" ]; then
+      echo "❌ Missing newline at end of file: $file"
+      exit 1
+    fi
+  fi
+done
+echo "  ✓ end-of-file-fixer"
+
+# 4. check-yaml (verify no tab indentation in YAML files)
+for file in $(git diff --cached --name-only --diff-filter=ACM | grep -E '\.(ya?ml)$' || true); do
+  if [ -f "$file" ]; then
+    if grep -q "$(printf '\t')" "$file"; then
+      echo "❌ Tab character detected in YAML file: $file (YAML specification forbids tab indentation)"
+      exit 1
+    fi
+  fi
+done
+echo "  ✓ check-yaml"
+
+# 5. check-toml (verify Cargo.toml and syntax)
+mise exec -- cargo verify-project --manifest-path cli/Cargo.toml > /dev/null
+for file in $(git diff --cached --name-only --diff-filter=ACM | grep -E '\.toml$' || true); do
+  if [ -f "$file" ]; then
+    if command -v python3 >/dev/null 2>&1; then
+      python3 -c "import tomllib, sys; tomllib.load(open(sys.argv[1], 'rb'))" "$file" 2>/dev/null || {
+        echo "❌ Invalid TOML syntax in $file"
+        exit 1
+      }
+    fi
+  fi
+done
+echo "  ✓ check-toml"
+
+# 6. Rust quality checks via mise
+mise run fmt-check
+echo "  ✓ cargo fmt"
+
+mise run clippy
+echo "  ✓ cargo clippy"
+
+mise run test
+echo "  ✓ cargo test"
+
+echo "✅ All pre-commit checks passed!"
