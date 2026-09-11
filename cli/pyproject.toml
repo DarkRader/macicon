@@ -39,7 +39,7 @@ classifiers = [
 dependencies = []
 
 [project.scripts]
-macicon = "macicon.cli:main"
+macicon = "cli:main"
 
 [dependency-groups]
 dev = [
@@ -48,3 +48,9 @@ dev = [
     "pytest-cov>=5.0.0",
     "ruff>=0.4.0",
 ]
+
+[tool.hatch.build.targets.wheel]
+packages = ["src"]
+
+[tool.hatch.build.targets.wheel.sources]
+"src" = ""

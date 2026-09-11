@@ -5,7 +5,7 @@ import shutil
 import subprocess
 import tempfile
 
-from .constants import (
+from constants import (
     CANVAS_SIZE,
     CORNER_RADIUS,
     DEFAULT_SYMBOL_SIZE,

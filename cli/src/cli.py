@@ -6,10 +6,10 @@ import shutil
 import subprocess
 import sys
 
-from .app_icon import apply_icon_to_app
-from .fetcher import extract_path_from_svg, fetch_icon_or_create
-from .renderer import generate_single_icon
-from .themes import (
+from app_icon import apply_icon_to_app
+from fetcher import extract_path_from_svg, fetch_icon_or_create
+from renderer import generate_single_icon
+from themes import (
     THEME_PRESETS,
     compute_styling,
     get_icons_base_dir,

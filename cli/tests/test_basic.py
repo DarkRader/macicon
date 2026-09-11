@@ -1,8 +1,8 @@
 """Basic unit tests for macicon."""
 
-from macicon.fetcher import extract_path_from_svg
-from macicon.renderer import build_letter_svg
-from macicon.themes import THEME_PRESETS, compute_styling, is_color_dark
+from fetcher import extract_path_from_svg
+from renderer import build_letter_svg
+from themes import THEME_PRESETS, compute_styling, is_color_dark
 
 
 def test_theme_presets() -> None:

@@ -7,7 +7,7 @@ import urllib.error
 import urllib.parse
 import urllib.request
 
-from .constants import COMMON_ALIASES, KNOWN_ICONS
+from constants import COMMON_ALIASES, KNOWN_ICONS
 
 
 def extract_path_from_svg(svg_content: str) -> tuple[str, str, str]:
