@@ -23,11 +23,45 @@ A modern, standalone macOS command-line tool to generate, customize, theme, and 
 
 ## 🚀 Installation
 
-### Using `cargo`
+### Homebrew
 
-Install the CLI binary directly from GitHub:
+Install via Homebrew tap formula:
 
 ```bash
+brew install DarkRader/macicon/macicon
+```
+
+### Nix / NixOS / nix-darwin
+
+Run directly with Nix Flakes:
+
+```bash
+nix run github:DarkRader/macicon -- slack --theme dark
+```
+
+Or install into your user profile:
+
+```bash
+nix profile install github:DarkRader/macicon
+```
+
+### Prebuilt Standalone Binaries (GitHub Releases)
+
+Download prebuilt Apple Silicon (`arm64`), Intel (`x86_64`), or Fat Universal binaries directly from [GitHub Releases](https://github.com/DarkRader/macicon/releases).
+
+```bash
+# Example: Download and install universal binary
+curl -fsSL https://github.com/DarkRader/macicon/releases/latest/download/macicon-v0.1.1-macos-universal.tar.gz | tar -xz
+sudo mv macicon /usr/local/bin/
+```
+
+### Using `cargo`
+
+Install from crates.io or directly from GitHub:
+
+```bash
+cargo install macicon
+# Or directly from GitHub:
 cargo install --git https://github.com/DarkRader/macicon.git --package macicon
 ```
 

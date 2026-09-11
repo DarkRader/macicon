@@ -2,7 +2,14 @@
 name = "macicon"
 version = "0.1.1" # x-release-please-version
 edition = "2024"
-description = "Generate and apply custom macOS squircle icons"
+rust-version = "1.98.1"
+description = "Generate, customize, and apply Apple continuous-curvature squircle app icons on macOS"
+license = "MIT"
+repository = "https://github.com/DarkRader/macicon"
+homepage = "https://github.com/DarkRader/macicon"
+readme = "README.md"
+keywords = ["macos", "icon", "squircle", "icns", "apple"]
+categories = ["command-line-utilities", "graphics", "os::macos-apis"]
 
 [dependencies]
 clap = { version = "=4.6.6", features = ["derive"] }
