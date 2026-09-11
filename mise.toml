@@ -34,3 +34,11 @@ run = "cargo fmt --check"
 [tasks.check]
 description = "Run all checks (fmt-check, clippy, test)"
 depends = ["fmt-check", "clippy", "test"]
+
+[tasks.pre-commit]
+description = "Run all pre-commit validation checks"
+run = ".githooks/pre-commit"
+
+[tasks.setup-hooks]
+description = "Configure repository git hooks directory"
+run = "git config core.hooksPath .githooks && chmod +x .githooks/pre-commit"
