@@ -35,6 +35,11 @@ run = "cargo fmt --check"
 description = "Run all checks (fmt-check, clippy, test)"
 depends = ["fmt-check", "clippy", "test"]
 
+[tasks.package]
+description = "Package crate for crates.io dry-run verification"
+dir = "cli"
+run = "cargo package --allow-dirty"
+
 [tasks.pre-commit]
 description = "Run all pre-commit validation checks"
 run = ".githooks/pre-commit"
