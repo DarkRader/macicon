@@ -1,5 +1,23 @@
 # Changelog
 
+## [0.1.1](https://github.com/DarkRader/macicon/compare/v0.1.0...v0.1.1) (2026-09-11)
+
+
+### ♻️ Updates & Improvements
+
+* **deps:** update dependency rust to v1.98.1 ([#22](https://github.com/DarkRader/macicon/issues/22)) ([5b26570](https://github.com/DarkRader/macicon/commit/5b265702bb71885dac88366d557ce03642437655))
+
+
+### 🐛 Fixes
+
+* **deps:** pin dependencies ([#25](https://github.com/DarkRader/macicon/issues/25)) ([7dbc798](https://github.com/DarkRader/macicon/commit/7dbc798da9243a284c596842494d75674aec0ee0))
+* **deps:** update rust crate ureq to v3 ([#23](https://github.com/DarkRader/macicon/issues/23)) ([b1918fb](https://github.com/DarkRader/macicon/commit/b1918fb86ff3aaad5f5843d6554cec1f48146e7c))
+
+
+### 📦 Dependencies
+
+* configure Renovate and upgrade to Rust 2024 edition ([#20](https://github.com/DarkRader/macicon/issues/20)) ([3392781](https://github.com/DarkRader/macicon/commit/33927815a916c50c3df94706128a168930cfeb04))
+
 ## [0.1.0](https://github.com/DarkRader/macicon/compare/v0.0.1...v0.1.0) (2026-09-11)
 
 
