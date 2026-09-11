@@ -1,2 +1,36 @@
 [tools]
 rust = "latest"
+
+[tasks.build]
+description = "Build debug binary"
+dir = "cli"
+run = "cargo build"
+
+[tasks.release]
+description = "Build optimized release binary"
+dir = "cli"
+run = "cargo build --release"
+
+[tasks.test]
+description = "Run integration and unit test suite"
+dir = "cli"
+run = "cargo test"
+
+[tasks.clippy]
+description = "Run clippy linter with strict warnings"
+dir = "cli"
+run = "cargo clippy --all-targets -- -D warnings"
+
+[tasks.fmt]
+description = "Format code with rustfmt"
+dir = "cli"
+run = "cargo fmt"
+
+[tasks.fmt-check]
+description = "Check code formatting"
+dir = "cli"
+run = "cargo fmt --check"
+
+[tasks.check]
+description = "Run all checks (fmt-check, clippy, test)"
+depends = ["fmt-check", "clippy", "test"]

@@ -14,9 +14,6 @@ jobs:
   check-and-test:
     name: Check & Test (${{ matrix.os }})
     runs-on: ${{ matrix.os }}
-    defaults:
-      run:
-        working-directory: cli
     strategy:
       fail-fast: false
       matrix:
@@ -32,15 +29,8 @@ jobs:
       - name: Install rustfmt and clippy
         run: mise exec -- rustup component add rustfmt clippy
 
-      - name: Check Formatting (cargo fmt)
-        run: mise exec -- cargo fmt --check
+      - name: Run checks (fmt, clippy, test)
+        run: mise run check
 
-
-      - name: Lint (cargo clippy)
-        run: mise exec -- cargo clippy --all-targets -- -D warnings
-
-      - name: Run Tests (cargo test)
-        run: mise exec -- cargo test
-
-      - name: Build Release Binary
-        run: mise exec -- cargo build --release
+      - name: Build release binary
+        run: mise run release
