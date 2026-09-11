@@ -1,9 +1,9 @@
 # macicon 🍎🎗
 
 [![macOS](https://img.shields.io/badge/platform-macOS-lightgrey.svg)](https://www.apple.com/macos/)
-[![Python](https://img.shields.io/badge/python-3.9+-blue.svg)](https://www.python.org/)
+[![Rust](https://img.shields.io/badge/rust-2021%20edition-orange.svg)](https://www.rust-lang.org/)
 [![License: MIT](https://img.shields.io/badge/License-MIT-green.svg)](https://opensource.org/licenses/MIT)
-[![Managed with uv](https://img.shields.io/badge/managed%20with-uv-purple.svg)](https://github.com/astral-sh/uv)
+[![CI](https://github.com/DarkRader/macicon/actions/workflows/test.yml/badge.svg)](https://github.com/DarkRader/macicon/actions)
 
 A modern, standalone macOS command-line tool to generate, customize, theme, and apply Apple continuous-curvature squircle application icons (`.icns`).
 
@@ -17,34 +17,44 @@ A modern, standalone macOS command-line tool to generate, customize, theme, and 
 - **Safe 1-Step Application**: Applies icons to running macOS `.app` bundles using native `NSWorkspace.setIcon` without modifying application binaries or breaking Apple code signatures.
 - **Comprehensive Theming Engine**: Comes with 12+ built-in presets (`light`, `dark`, `nord`, `catppuccin`, `dracula`, `slate`, `rose-pine`, `apple`, etc.), supporting custom linear gradients, border styling, symbol elevation shadows, and batch multi-theme generation (`themes.json`).
 - **Typography Monograms / Lettermarks**: Generates sleek Apple-style lettermarks with San Francisco typography (`--letter "AI"`).
-- **Zero Python Dependencies**: Written entirely in pure Python standard library leveraging native macOS subsystem tools (`qlmanage`, `swift`, `sips`, `iconutil`, and `osascript`).
+- **Blazing-Fast Native Rust**: Written in pure Rust for maximum performance, safety, and reliability, leveraging native macOS subsystem tools (`qlmanage`, `swift`, `sips`, `iconutil`, and `osascript`).
 
 ---
 
 ## 🚀 Installation
 
-### Using `uv` (Recommended)
+### Using `cargo`
 
-Install globally as an isolated CLI tool:
+Install the CLI binary directly from GitHub:
 
 ```bash
-# From local repository
-uv tool install /Users/Artyom_1/Git/DarkRader/macicon
-
-# Or in editable mode for local development
-uv tool install --editable /Users/Artyom_1/Git/DarkRader/macicon
+cargo install --git https://github.com/DarkRader/macicon.git --package macicon
 ```
 
-### Using `pipx`
+Or build and install from a local clone:
 
 ```bash
-pipx install /Users/Artyom_1/Git/DarkRader/macicon
+git clone https://github.com/DarkRader/macicon.git
+cd macicon
+cargo install --path cli
 ```
 
-### Using `pip`
+### Local Development (using `mise`)
+
+This repository uses [`mise`](https://mise.jdx.dev/) for toolchain and task automation:
 
 ```bash
-pip install -e /Users/Artyom_1/Git/DarkRader/macicon
+# Build debug binary
+mise run build
+
+# Build optimized release binary
+mise run release
+
+# Run all checks (format, clippy, tests)
+mise run check
+
+# Install pre-commit hooks
+mise run setup-hooks
 ```
 
 Verify installation:
