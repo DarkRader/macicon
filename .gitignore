@@ -31,3 +31,7 @@ mypy_report*/
 
 # Temporary icon artifacts
 *.iconset/
+
+# Rust artifacts
+target/
+

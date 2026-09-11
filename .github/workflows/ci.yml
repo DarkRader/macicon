@@ -2,7 +2,7 @@ name: CI
 
 on:
   push:
-    branches: [main]
+    branches: [main, feat/*]
   pull_request:
     branches: [main]
 
@@ -11,45 +11,29 @@ concurrency:
   cancel-in-progress: true
 
 jobs:
-  lint-and-test:
-    name: Test (${{ matrix.os }} / Python ${{ matrix.python-version }})
+  check-and-test:
+    name: Check & Test (${{ matrix.os }})
     runs-on: ${{ matrix.os }}
-    defaults:
-      run:
-        working-directory: cli
     strategy:
       fail-fast: false
       matrix:
-        os: [macos-latest, ubuntu-latest]
-        python-version: ["3.12", "3.13"]
+        os: [macos-latest]
 
     steps:
       - name: Checkout repository
         uses: actions/checkout@v4
 
-      - name: Set up uv
-        uses: astral-sh/setup-uv@v5
-        with:
-          version: "latest"
-          enable-cache: true
-          cache-dependency-glob: |
-            cli/pyproject.toml
-            cli/uv.lock
+      - name: Install mise and tools
+        uses: jdx/mise-action@v2
 
-      - name: Set up Python ${{ matrix.python-version }}
-        run: uv python install ${{ matrix.python-version }}
+      - name: Check Formatting (cargo fmt)
+        run: mise exec -- cargo fmt --check
 
-      - name: Install dependencies
-        run: uv sync --group dev
+      - name: Lint (cargo clippy)
+        run: mise exec -- cargo clippy --all-targets -- -D warnings
 
-      - name: Run Ruff Format Check
-        run: uv run scripts/format_ruff.sh --check
+      - name: Run Tests (cargo test)
+        run: mise exec -- cargo test
 
-      - name: Run Ruff Linter
-        run: uv run scripts/lint_ruff.sh
-
-      - name: Run Mypy Type Checker
-        run: uv run scripts/mypy.sh
-
-      - name: Run Pytest with Coverage
-        run: uv run scripts/pytest.sh -c
+      - name: Build Release Binary
+        run: mise exec -- cargo build --release
