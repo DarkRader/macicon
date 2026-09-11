@@ -1,6 +1,7 @@
 name: Build
 
 on:
+  workflow_dispatch:
   workflow_run:
     workflows: ["Create Release Notes"]
     types:
@@ -11,35 +12,87 @@ permissions:
 
 jobs:
   build:
-    name: Build (cargo build --release)
+    name: Build Multi-Arch & Universal Binaries
     runs-on: macos-latest
     if: >
-      ${{ github.event.workflow_run.conclusion == 'success' &&
-          contains(github.event.workflow_run.head_commit.message, 'chore(main): release') }}
+      github.event_name == 'workflow_dispatch' ||
+      (github.event.workflow_run.conclusion == 'success' &&
+       contains(github.event.workflow_run.head_commit.message, 'chore(main): release'))
     steps:
       - name: Checkout repository
         uses: actions/checkout@v7.0.1
         with:
           fetch-depth: 0
 
+      - name: Fetch git tags
+        run: git fetch --tags --force
+
       - name: Install mise and tools
         uses: jdx/mise-action@v4.3.0
 
-      - name: Build Release Binary
-        run: mise run release
-
-      - name: Package Binary & Generate Checksum
+      - name: Add Rust cross-compile targets
         run: |
-          TAG=$(git describe --tags --abbrev=0)
-          ARCH=$(uname -m)
-          ARCHIVE="macicon-${TAG}-macos-${ARCH}.tar.gz"
-          tar -czvf "${ARCHIVE}" -C cli/target/release macicon
-          shasum -a 256 "${ARCHIVE}" > "${ARCHIVE}.sha256"
-          echo "ARCHIVE=${ARCHIVE}" >> $GITHUB_ENV
+          mise exec -- rustup target add aarch64-apple-darwin x86_64-apple-darwin
+
+      - name: Build macOS binaries
+        run: |
+          mise exec -- cargo build --release --target aarch64-apple-darwin --manifest-path cli/Cargo.toml
+          mise exec -- cargo build --release --target x86_64-apple-darwin --manifest-path cli/Cargo.toml
+
+      - name: Create Universal Binary
+        run: |
+          mkdir -p cli/target/universal/release
+          lipo -create -output cli/target/universal/release/macicon \
+            cli/target/aarch64-apple-darwin/release/macicon \
+            cli/target/x86_64-apple-darwin/release/macicon
+          lipo -info cli/target/universal/release/macicon
+
+      - name: Package Archives & Generate Checksums
+        run: |
+          TAG=$(git describe --tags --abbrev=0 2>/dev/null || echo "v0.1.1")
           echo "TAG=${TAG}" >> $GITHUB_ENV
 
-      - name: Upload Binary to GitHub Release
+          # Package ARM64
+          tar -czvf "macicon-${TAG}-macos-arm64.tar.gz" -C cli/target/aarch64-apple-darwin/release macicon
+          shasum -a 256 "macicon-${TAG}-macos-arm64.tar.gz" > "macicon-${TAG}-macos-arm64.tar.gz.sha256"
+
+          # Package x86_64
+          tar -czvf "macicon-${TAG}-macos-x86_64.tar.gz" -C cli/target/x86_64-apple-darwin/release macicon
+          shasum -a 256 "macicon-${TAG}-macos-x86_64.tar.gz" > "macicon-${TAG}-macos-x86_64.tar.gz.sha256"
+
+          # Package Universal
+          tar -czvf "macicon-${TAG}-macos-universal.tar.gz" -C cli/target/universal/release macicon
+          shasum -a 256 "macicon-${TAG}-macos-universal.tar.gz" > "macicon-${TAG}-macos-universal.tar.gz.sha256"
+
+          # Combined checksums
+          shasum -a 256 macicon-${TAG}-macos-*.tar.gz > checksums.txt
+
+      - name: Upload Binaries to GitHub Release
         env:
           GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
         run: |
-          gh release upload "${TAG}" "${ARCHIVE}" "${ARCHIVE}.sha256" --clobber
+          gh release upload "${TAG}" macicon-*.tar.gz macicon-*.sha256 checksums.txt --clobber
+
+      - name: Update Homebrew Formula
+        run: |
+          UNIVERSAL_SHA=$(shasum -a 256 "macicon-${TAG}-macos-universal.tar.gz" | awk '{print $1}')
+          python3 -c "
+          import re, sys
+          tag = sys.argv[1].lstrip('v')
+          sha = sys.argv[2]
+          path = 'Formula/macicon.rb'
+          with open(path, 'r') as f:
+              content = f.read()
+          content = re.sub(r'version \".*\"', f'version \"{tag}\"', content)
+          content = re.sub(r'sha256 \".*\"', f'sha256 \"{sha}\"', content)
+          with open(path, 'w') as f:
+              f.write(content)
+          " "${TAG}" "${UNIVERSAL_SHA}"
+
+          git config user.name "github-actions[bot]"
+          git config user.email "github-actions[bot]@users.noreply.github.com"
+          git add Formula/macicon.rb
+          if ! git diff --staged --quiet; then
+            git commit -m "chore(formula): update Homebrew formula to ${TAG}"
+            git push origin HEAD:main
+          fi
