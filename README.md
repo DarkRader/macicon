@@ -62,7 +62,7 @@ Install from crates.io or directly from GitHub:
 ```bash
 cargo install macicon
 # Or directly from GitHub:
-cargo install --git https://github.com/DarkRader/macicon.git --package macicon
+cargo install --git https://github.com/DarkRader/macicon.git
 ```
 
 Or build and install from a local clone:
