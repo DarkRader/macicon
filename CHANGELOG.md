@@ -1,5 +1,12 @@
 # Changelog
 
+## [0.2.0](https://github.com/DarkRader/macicon/compare/v0.1.1...v0.2.0) (2026-09-11)
+
+
+### ✨ New Features
+
+* **packaging:** Homebrew formula, Nix flake derivation, multi-arch releases, and crates.io metadata ([#26](https://github.com/DarkRader/macicon/issues/26)) ([eb7ffda](https://github.com/DarkRader/macicon/commit/eb7ffda07e4e97cf723d6d84b7cf34ea82a27032))
+
 ## [0.1.1](https://github.com/DarkRader/macicon/compare/v0.1.0...v0.1.1) (2026-09-11)
 
 
