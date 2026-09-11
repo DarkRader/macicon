@@ -90,14 +90,15 @@ fn fetch_from_url(query_str: &str) -> (Option<IconInfo>, String) {
             || host.contains("cdn.simpleicons.org")
             || host.contains("jsdelivr.net")
         {
-            let agent = ureq::AgentBuilder::new()
-                .timeout(Duration::from_secs(8))
+            let config = ureq::config::Config::builder()
+                .timeout_global(Some(Duration::from_secs(8)))
                 .user_agent("macicon-cli")
                 .build();
+            let agent = ureq::Agent::new_with_config(config);
 
             match agent.get(query_str).call() {
-                Ok(resp) => {
-                    if let Ok(content) = resp.into_string() {
+                Ok(mut resp) => {
+                    if let Ok(content) = resp.body_mut().read_to_string() {
                         println!("Fetched SVG from URL: {}", query_str);
                         match extract_path_from_svg(&content) {
                             Ok((path_d, viewbox, fill_rule)) => {
@@ -146,10 +147,11 @@ fn fetch_from_url(query_str: &str) -> (Option<IconInfo>, String) {
 }
 
 fn search_online_icons(candidate_slugs: &[String], slug: &str) -> Option<IconInfo> {
-    let agent = ureq::AgentBuilder::new()
-        .timeout(Duration::from_secs(6))
+    let config = ureq::config::Config::builder()
+        .timeout_global(Some(Duration::from_secs(6)))
         .user_agent("macicon-cli")
         .build();
+    let agent = ureq::Agent::new_with_config(config);
 
     for cand in candidate_slugs {
         let sources = [
@@ -170,8 +172,8 @@ fn search_online_icons(candidate_slugs: &[String], slug: &str) -> Option<IconInf
         ];
 
         for (source_name, url) in sources {
-            if let Ok(resp) = agent.get(&url).call()
-                && let Ok(content) = resp.into_string()
+            if let Ok(mut resp) = agent.get(&url).call()
+                && let Ok(content) = resp.body_mut().read_to_string()
             {
                 println!("Found icon on {}: {}", source_name, url);
                 if let Ok((path_d, viewbox, fill_rule)) = extract_path_from_svg(&content) {
