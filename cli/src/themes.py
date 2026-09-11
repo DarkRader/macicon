@@ -110,13 +110,18 @@ SYMBOL_SHORTCUTS = {
     "cyan": "#00FFFF",
 }
 
+HEX_SHORT_LEN = 3
+HEX_FULL_LEN = 6
+DARK_LUMINANCE_THRESHOLD = 100
+COLOR_PAIR_LEN = 2
+
 
 def is_color_dark(hex_color: str) -> bool:
-    """Returns True if the hex color has a dark perceived luminance."""
+    """Return True if the hex color has a dark perceived luminance."""
     hex_color = hex_color.lstrip("#")
-    if len(hex_color) == 3:
+    if len(hex_color) == HEX_SHORT_LEN:
         hex_color = "".join(c * 2 for c in hex_color)
-    if len(hex_color) != 6:
+    if len(hex_color) != HEX_FULL_LEN:
         return False
     try:
         r, g, b = int(hex_color[0:2], 16), int(hex_color[2:4], 16), int(hex_color[4:6], 16)
@@ -124,7 +129,7 @@ def is_color_dark(hex_color: str) -> bool:
     except ValueError:
         return False
     else:
-        return luminance < 100
+        return luminance < DARK_LUMINANCE_THRESHOLD
 
 
 def compute_styling(
@@ -133,7 +138,7 @@ def compute_styling(
     color: str | None = None,
     border_color: str | None = None,
 ) -> tuple[str, str, str, str | tuple[str, str]]:
-    """Resolves background gradient, border color, and symbol color."""
+    """Resolve background gradient, border color, and symbol color."""
     preset = THEME_PRESETS.get(theme, THEME_PRESETS["light"])
     bg_top = preset["bg_top"]
     bg_bottom = preset["bg_bottom"]
@@ -150,7 +155,7 @@ def compute_styling(
             if len(parts) == 1:
                 bg_top = parts[0]
                 bg_bottom = parts[0]
-            elif len(parts) >= 2:
+            elif len(parts) >= COLOR_PAIR_LEN:
                 bg_top = parts[0]
                 bg_bottom = parts[1]
 
@@ -174,7 +179,7 @@ def compute_styling(
 
 
 def get_icons_base_dir(custom_path: str | None = None) -> str:
-    """Resolves base directory for icons and themes manifest."""
+    """Resolve base directory for icons and themes manifest."""
     if custom_path:
         return str(Path(custom_path).expanduser().resolve())
 
@@ -191,7 +196,7 @@ def get_icons_base_dir(custom_path: str | None = None) -> str:
 
 
 def load_themes_manifest(manifest_path: str, icons_base_dir: str) -> dict[str, dict[str, object]]:
-    """Loads registered themes manifest or creates standard default definitions."""
+    """Load registered themes manifest or create standard default definitions."""
     data: dict[str, dict[str, object]] = {}
     path = Path(manifest_path)
     base_dir = Path(icons_base_dir)
@@ -224,7 +229,7 @@ def load_themes_manifest(manifest_path: str, icons_base_dir: str) -> dict[str, d
 
 
 def save_themes_manifest(manifest_path: str, data: dict[str, dict[str, object]]) -> None:
-    """Saves themes manifest to disk as formatted JSON."""
+    """Save themes manifest to disk as formatted JSON."""
     try:
         path = Path(manifest_path).resolve()
         path.parent.mkdir(parents=True, exist_ok=True)

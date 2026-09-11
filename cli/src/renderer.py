@@ -14,6 +14,9 @@ from constants import (
     TILE_Y,
 )
 
+VIEWBOX_4_TUPLE = 4
+VIEWBOX_2_TUPLE = 2
+
 
 def build_svg(
     path_d: str,
@@ -23,14 +26,15 @@ def build_svg(
     border: str,
     symbol_color: str | tuple[str, str],
     scale: float,
+    *,
     fill_rule: str = "evenodd",
     shadow: bool = True,
 ) -> str:
-    """Generates standard Apple HIG squircle SVG markup with embedded symbol."""
+    """Generate standard Apple HIG squircle SVG markup with embedded symbol."""
     vb_parts = [float(x) for x in viewbox.replace(",", " ").split() if x]
-    if len(vb_parts) == 4:
+    if len(vb_parts) == VIEWBOX_4_TUPLE:
         min_x, min_y, vb_w, vb_h = vb_parts
-    elif len(vb_parts) == 2:
+    elif len(vb_parts) == VIEWBOX_2_TUPLE:
         min_x, min_y, vb_w, vb_h = 0.0, 0.0, vb_parts[0], vb_parts[1]
     else:
         min_x, min_y, vb_w, vb_h = 0.0, 0.0, 24.0, 24.0
@@ -90,9 +94,10 @@ def build_letter_svg(
     border: str,
     symbol_color: str | tuple[str, str],
     scale: float,
+    *,
     shadow: bool = True,
 ) -> str:
-    """Generates an Apple-style typography monogram lettermark SVG."""
+    """Generate an Apple-style typography monogram lettermark SVG."""
     font_size = int(400 * scale) if len(letter) == 1 else int(280 * scale)
     y_pos = 635 if len(letter) == 1 else 600
     filter_attr = ' filter="url(#symbol-shadow)"' if shadow else ""
@@ -135,8 +140,8 @@ def build_letter_svg(
 </svg>"""
 
 
-def render_and_mask(svg_path: str, temp_dir: str, shadow: bool = True) -> str:
-    """Renders SVG with QuickLook and strictly masks outer border to transparent alpha."""
+def render_and_mask(svg_path: str, temp_dir: str, *, shadow: bool = True) -> str:
+    """Render SVG with QuickLook and strictly mask outer border to transparent alpha."""
     t_dir = Path(temp_dir)
     subprocess.run(
         ["qlmanage", "-t", "-s", "1024", "-o", str(t_dir), svg_path],
@@ -213,7 +218,7 @@ try! data.write(to: outURL)
 
 
 def compile_icns(masked_png: str, out_icns: str, temp_dir: str) -> None:
-    """Constructs multi-resolution iconset and compiles into .icns bundle."""
+    """Construct multi-resolution iconset and compile into .icns bundle."""
     t_dir = Path(temp_dir)
     iconset_dir = t_dir / "App.iconset"
     iconset_dir.mkdir(parents=True, exist_ok=True)
@@ -253,11 +258,12 @@ def generate_single_icon(
     bg_bottom: str,
     border: str,
     symbol_color: str | tuple[str, str],
+    *,
     scale: float = 1.25,
     shadow: bool = True,
     preview_path: str | None = None,
 ) -> str:
-    """Generates a complete squircle .icns package from vector info."""
+    """Generate a complete squircle .icns package from vector info."""
     temp_dir = tempfile.mkdtemp(prefix="macicon_")
     t_dir = Path(temp_dir)
     try:
@@ -280,7 +286,7 @@ def generate_single_icon(
                 border,
                 symbol_color,
                 scale,
-                str(icon_info.get("fill_rule", "evenodd")),
+                fill_rule=str(icon_info.get("fill_rule", "evenodd")),
                 shadow=shadow,
             )
 

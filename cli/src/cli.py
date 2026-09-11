@@ -4,6 +4,7 @@ import argparse
 import shutil
 import subprocess
 import sys
+import tempfile
 from pathlib import Path
 
 from app_icon import apply_icon_to_app
@@ -19,6 +20,7 @@ from themes import (
 
 
 def parse_args() -> argparse.Namespace:
+    """Parse and return command-line arguments for macicon."""
     parser = argparse.ArgumentParser(
         prog="macicon",
         description="Generate, customize, and apply Apple continuous-curvature squircle app icons on macOS.",
@@ -135,13 +137,9 @@ def parse_args() -> argparse.Namespace:
     return parser.parse_args()
 
 
-def handle_create_theme(args: argparse.Namespace) -> None:
-    theme_name = args.create_theme.strip().lower()
-    icons_base_path = Path(get_icons_base_dir(args.icons_dir))
-    target_dir = icons_base_path / theme_name
-    target_dir.mkdir(parents=True, exist_ok=True)
-
-    ref_theme = args.from_theme or "light"
+def _discover_reference_theme(icons_base_path: Path, from_theme: str | None) -> tuple[Path, str]:
+    """Locate reference theme directory to discover existing icons."""
+    ref_theme = from_theme or "light"
     ref_dir = icons_base_path / ref_theme
     if not ref_dir.is_dir():
         candidates = ["light", "dark"] + [
@@ -150,10 +148,18 @@ def handle_create_theme(args: argparse.Namespace) -> None:
         for c in candidates:
             c_dir = icons_base_path / c
             if c_dir.is_dir() and any(f.suffix == ".icns" for f in c_dir.iterdir()):
-                ref_dir = c_dir
-                ref_theme = c
-                break
+                return c_dir, c
+    return ref_dir, ref_theme
 
+
+def handle_create_theme(args: argparse.Namespace) -> None:
+    """Batch generate all existing icons into a newly created theme preset."""
+    theme_name = args.create_theme.strip().lower()
+    icons_base_path = Path(get_icons_base_dir(args.icons_dir))
+    target_dir = icons_base_path / theme_name
+    target_dir.mkdir(parents=True, exist_ok=True)
+
+    ref_dir, ref_theme = _discover_reference_theme(icons_base_path, args.from_theme)
     if not ref_dir.is_dir():
         sys.exit(f"⚠️  Error: Could not find reference theme directory under '{icons_base_path}'.")
 
@@ -235,6 +241,7 @@ def handle_create_theme(args: argparse.Namespace) -> None:
 
 
 def handle_all_themes(args: argparse.Namespace, icon_info: dict[str, str], base_name: str) -> None:
+    """Generate a single icon across all registered themes in the themes manifest."""
     icons_base_path = Path(get_icons_base_dir(args.icons_dir))
     themes_file = icons_base_path / "themes.json"
     themes_data = load_themes_manifest(str(themes_file), str(icons_base_path))
@@ -276,6 +283,7 @@ def handle_all_themes(args: argparse.Namespace, icon_info: dict[str, str], base_
 
 
 def handle_sync_themes(args: argparse.Namespace) -> None:
+    """Synchronize and generate missing icons across all registered themes."""
     icons_base_path = Path(get_icons_base_dir(args.icons_dir))
     themes_file = icons_base_path / "themes.json"
     themes_data = load_themes_manifest(str(themes_file), str(icons_base_path))
@@ -329,52 +337,43 @@ def handle_sync_themes(args: argparse.Namespace) -> None:
     print("\n✨ All themes are now synchronized!\n")
 
 
-def main() -> None:
-    args = parse_args()
+def handle_icns_action(args: argparse.Namespace) -> None:
+    """Handle operations on an existing .icns file (preview, out copy, or app apply)."""
+    icns_path = Path(args.icns).expanduser().resolve()
+    if not icns_path.exists():
+        sys.exit(f"⚠️  Error: .icns file not found at '{icns_path}'")
 
-    if args.create_theme:
-        handle_create_theme(args)
-        return
+    base_name = icns_path.stem
 
-    if args.sync_themes:
-        handle_sync_themes(args)
-        return
+    if args.preview:
+        icns_preview = (
+            Path(tempfile.gettempdir()) / f"{base_name}-preview.png"
+            if args.preview is True
+            else Path(args.preview).expanduser().resolve()
+        )
+        subprocess.run(
+            ["sips", "-s", "format", "png", str(icns_path), "--out", str(icns_preview)],
+            check=True,
+            stdout=subprocess.DEVNULL,
+        )
+        print(f"Saved PNG preview: {icns_preview}")
 
-    if args.icns:
-        icns_path = Path(args.icns).expanduser().resolve()
-        if not icns_path.exists():
-            sys.exit(f"⚠️  Error: .icns file not found at '{icns_path}'")
+    if args.out:
+        out_dest = Path(args.out).expanduser().resolve()
+        out_dest.parent.mkdir(parents=True, exist_ok=True)
+        shutil.copy(icns_path, out_dest)
+        print(f"Copied icon to: {out_dest}")
 
-        base_name = icns_path.stem
+    if args.apply:
+        apply_icon_to_app(args.apply, str(icns_path), restart_dock=not args.no_dock_restart)
+    elif not args.preview and not args.out:
+        print(
+            f"Icon verified at '{icns_path}'. Pass --apply <app_path> to apply it to an application."
+        )
 
-        if args.preview:
-            icns_preview = (
-                Path(f"/tmp/{base_name}-preview.png")
-                if args.preview is True
-                else Path(args.preview).expanduser().resolve()
-            )
-            subprocess.run(
-                ["sips", "-s", "format", "png", str(icns_path), "--out", str(icns_preview)],
-                check=True,
-                stdout=subprocess.DEVNULL,
-            )
-            print(f"Saved PNG preview: {icns_preview}")
 
-        if args.out:
-            out_dest = Path(args.out).expanduser().resolve()
-            out_dest.parent.mkdir(parents=True, exist_ok=True)
-            shutil.copy(icns_path, out_dest)
-            print(f"Copied icon to: {out_dest}")
-
-        if args.apply:
-            apply_icon_to_app(args.apply, str(icns_path), restart_dock=not args.no_dock_restart)
-        elif not args.preview and not args.out:
-            print(
-                f"Icon verified at '{icns_path}'. Pass --apply <app_path> to apply it to an application."
-            )
-        return
-
-    # Determine input source
+def resolve_input_source(args: argparse.Namespace) -> tuple[dict[str, str], str]:
+    """Parse vector input source into icon_info dictionary and base stem name."""
     if args.query:
         icon_info = fetch_icon_or_create(args.query, fallback_letter=args.fallback_letter)
         base_name = icon_info.get("name") or "custom"
@@ -396,6 +395,26 @@ def main() -> None:
             "fill_rule": "evenodd",
         }
         base_name = "custom"
+    return icon_info, base_name
+
+
+def main() -> None:
+    """Execute the main entry point for the macicon command-line interface."""
+    args = parse_args()
+
+    if args.create_theme:
+        handle_create_theme(args)
+        return
+
+    if args.sync_themes:
+        handle_sync_themes(args)
+        return
+
+    if args.icns:
+        handle_icns_action(args)
+        return
+
+    icon_info, base_name = resolve_input_source(args)
 
     if args.all_themes:
         handle_all_themes(args, icon_info, base_name)
@@ -409,13 +428,13 @@ def main() -> None:
             args.out = str(theme_dir / f"{base_name}.icns")
         elif args.apply:
             app_stem = Path(args.apply).stem.lower().replace(" ", "-")
-            args.out = f"/tmp/{app_stem}.icns"
+            args.out = str(Path(tempfile.gettempdir()) / f"{app_stem}.icns")
         else:
             args.out = f"./{base_name}.icns"
 
     preview_path: str | None = None
     if args.preview is True:
-        preview_path = f"/tmp/{base_name}-preview.png"
+        preview_path = str(Path(tempfile.gettempdir()) / f"{base_name}-preview.png")
     elif isinstance(args.preview, str):
         preview_path = str(Path(args.preview).expanduser().resolve())
 

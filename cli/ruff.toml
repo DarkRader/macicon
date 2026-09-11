@@ -15,29 +15,13 @@ ignore = [
     "T201",   # print (CLI user interface)
     "S603",   # subprocess-without-shell-equals-true
     "S607",   # start-process-with-partial-path
-    "S310",   # suspicious-url-open-usage
-    "S108",   # hardcoded-temp-file
 
     # Function Signatures & Complexity
     "PLR0913", # too-many-arguments
     "PLR0917", # too-many-positional-arguments
-    "PLR0912", # too-many-branches
-    "PLR0915", # too-many-statements
-    "FBT001",  # boolean-type-hint-positional-argument
-    "FBT002",  # boolean-default-value-positional-argument
 
     # Docstrings & Formatting
     "CPY001",  # missing-copyright-notice
-    "D100",    # missing-docstring-in-public-module
-    "D101",    # missing-docstring-in-public-class
-    "D102",    # missing-docstring-in-public-method
-    "D103",    # missing-docstring-in-public-function
-    "D104",    # missing-docstring-in-public-package
-    "D107",    # missing-docstring-in-init
-    "D400",    # ends-in-period
-    "D401",    # non-imperative-mood
-    "D415",    # ends-in-punctuation
-    "PLR2004", # magic-value-comparison
 ]
 
 [lint.per-file-ignores]

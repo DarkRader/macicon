@@ -5,8 +5,8 @@ import sys
 from pathlib import Path
 
 
-def apply_icon_to_app(app_path: str, icns_path: str, restart_dock: bool = True) -> None:
-    """Applies .icns directly to a target .app bundle without breaking code signatures."""
+def apply_icon_to_app(app_path: str, icns_path: str, *, restart_dock: bool = True) -> None:
+    """Apply .icns directly to a target .app bundle without breaking code signatures."""
     target_app = Path(app_path).expanduser().resolve()
     target_icns = Path(icns_path).expanduser().resolve()
 
