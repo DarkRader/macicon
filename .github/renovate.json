@@ -1,0 +1,18 @@
+{
+  "$schema": "https://docs.renovatebot.com/renovate-schema.json",
+  "extends": ["config:recommended"],
+  "baseBranchPatterns": ["main"],
+  "labels": ["dependencies"],
+  "timezone": "Europe/Prague",
+  "rangeStrategy": "pin",
+  "prConcurrentLimit": 5,
+  "platformAutomerge": true,
+  "minimumReleaseAge": "7 days",
+  "semanticCommits": "enabled",
+  "semanticCommitType": "deps",
+  "packageRules": [
+    { "matchPackageNames": ["*"], "matchUpdateTypes": ["patch"], "automerge": true, "prPriority": 20, "addLabels": ["patch"] },
+    { "matchPackageNames": ["*"], "matchUpdateTypes": ["minor"], "automerge": false, "prPriority": 20, "addLabels": ["minor"] },
+    { "matchPackageNames": ["*"], "matchUpdateTypes": ["major"], "automerge": false, "prPriority": 20, "addLabels": ["major"] }
+  ]
+}
