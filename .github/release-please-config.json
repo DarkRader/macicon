@@ -1,0 +1,22 @@
+{
+  "release-type": "simple",
+  "packages": {
+    ".": {
+      "extra-files": [
+        "cli/Cargo.toml"
+      ]
+    }
+  },
+  "include-component-in-tag": false,
+  "changelog-sections": [
+    { "type": "feat", "section": "✨ New Features", "hidden": false },
+    { "type": "chore", "section": "♻️ Updates & Improvements", "hidden": false },
+    { "type": "fix", "section": "🐛 Fixes", "hidden": false },
+    { "type": "deps", "section": "📦 Dependencies", "hidden": false },
+    { "type": "refactor", "section": "🧹 Refactors", "hidden": false },
+    { "type": "docs", "section": "📝 Documentation", "hidden": false },
+    { "type": "test", "section": "🧪 Tests & Quality", "hidden": false },
+    { "type": "ci", "section": "⚙️ DevOps & CI/CD", "hidden": false }
+  ],
+  "always-bump-patch": true
+}
