@@ -1,0 +1,42 @@
+name: Sync Cargo Lock
+
+on:
+  workflow_run:
+    workflows: ["Create Release Notes"]
+    types:
+      - completed
+
+jobs:
+  sync-cargo-lock:
+    name: Sync Cargo.lock
+    runs-on: ubuntu-latest
+    if: >
+      ${{ github.event.workflow_run.conclusion == 'success' &&
+      github.event.workflow_run.head_branch == 'main' &&
+      !contains(github.event.workflow_run.head_commit.message, 'chore(main): release') }}
+    permissions:
+      contents: write
+
+    steps:
+      - uses: actions/checkout@v7.0.1
+        with:
+          fetch-depth: 0
+          ref: release-please--branches--main
+
+      - name: Install mise and tools
+        uses: jdx/mise-action@v4.3.0
+
+      - name: Update Cargo.lock
+        run: mise exec -- cargo check --manifest-path cli/Cargo.toml
+
+      - name: Commit and push changes
+        run: |
+          git config --global user.name "github-actions[bot]"
+          git config --global user.email "github-actions[bot]@users.noreply.github.com"
+          git add cli/Cargo.lock
+          if git diff --staged --quiet; then
+            echo "No changes to commit"
+          else
+            git commit -m "chore(release): sync Cargo.lock"
+            git push origin HEAD:release-please--branches--main
+          fi
