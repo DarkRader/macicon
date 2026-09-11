@@ -6,6 +6,14 @@
 
 The core codebase is written in pure Rust (2021 edition) and interfaces with macOS native APIs and system utilities (`qlmanage`, `swift`, `sips`, `iconutil`, and `osascript`). Project toolchains and tasks are orchestrated from the repository root using `mise`.
 
+## Architectural Invariants & Apple HIG Specifications
+
+- **Canvas Dimensions**: Standard 1024x1024 canvas.
+- **Squircle Geometry**: 832x832 squircle tile located at `x = 96`, `y = 88` with corner radius `r = 185` adhering strictly to Apple Human Interface Guidelines (HIG).
+- **Cocoa Coordinate Conversion**: Cocoa/AppKit uses bottom-left origin, corresponding to `y = 104` for clipping mask alignment.
+- **Corner Curvature**: Must preserve continuous curvature (superellipse / squircle) without sharp corner artifacts or rectangular fallbacks.
+- **Zero External C Dependencies**: Pure Rust and macOS subsystem utilities only; avoid binding external C/C++ graphics dependencies.
+
 ## Important Paths
 
 - `cli/`: Rust package directory (`Cargo.toml`, `Cargo.lock`).
@@ -80,3 +88,7 @@ Use these recognized types when applicable: `feat`, `chore`, `fix`, `deps`, `ref
 > [!IMPORTANT]
 > **Approval required**: Never create a git commit or push to remote branches without explicit user approval.
 > After completing a requested change, suggest the relevant scoped commit message and ask the user for confirmation first.
+
+## Pull Request Policy
+
+- **Do not modify the PR description for updates**: When appending changes, progress, or follow-ups to an existing Pull Request, never overwrite or edit the original PR description. Always post a new comment on the PR detailing the additions and linking relevant issues (e.g., `Resolves #<issue>`).
