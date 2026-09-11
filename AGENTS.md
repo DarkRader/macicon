@@ -4,7 +4,7 @@
 
 `macicon` is a standalone macOS CLI application designed to generate, customize, theme, and apply Apple continuous-curvature squircle application icons (`.icns`).
 
-The core codebase is written in pure Rust (2021 edition) and interfaces with macOS native APIs and system utilities (`qlmanage`, `swift`, `sips`, `iconutil`, and `osascript`). Project toolchains and tasks are orchestrated from the repository root using `mise`.
+The core codebase is written in pure Rust (2024 edition) and interfaces with macOS native APIs and system utilities (`qlmanage`, `swift`, `sips`, `iconutil`, and `osascript`). Project toolchains and tasks are orchestrated from the repository root using `mise`.
 
 ## Architectural Invariants & Apple HIG Specifications
 

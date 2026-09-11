@@ -4,11 +4,11 @@ use std::path::{Path, PathBuf};
 use std::process::Command;
 
 fn expand_tilde(path_str: &str) -> PathBuf {
-    if path_str.starts_with('~') {
-        if let Some(home) = std::env::var_os("HOME") {
-            let expanded = path_str.replacen('~', home.to_string_lossy().as_ref(), 1);
-            return PathBuf::from(expanded);
-        }
+    if path_str.starts_with('~')
+        && let Some(home) = std::env::var_os("HOME")
+    {
+        let expanded = path_str.replacen('~', home.to_string_lossy().as_ref(), 1);
+        return PathBuf::from(expanded);
     }
     PathBuf::from(path_str)
 }

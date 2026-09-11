@@ -8,11 +8,11 @@ use std::process::Command;
 use clap::Parser;
 
 use macicon::app_icon::apply_icon_to_app;
-use macicon::fetcher::{extract_path_from_svg, fetch_icon_or_create, IconInfo};
+use macicon::fetcher::{IconInfo, extract_path_from_svg, fetch_icon_or_create};
 use macicon::renderer::generate_single_icon;
 use macicon::themes::{
-    compute_styling, get_icons_base_dir, load_themes_manifest, save_themes_manifest, IconStyle,
-    ThemeConfig, THEME_PRESETS,
+    IconStyle, THEME_PRESETS, ThemeConfig, compute_styling, get_icons_base_dir,
+    load_themes_manifest, save_themes_manifest,
 };
 
 #[derive(Parser, Debug)]
@@ -125,12 +125,12 @@ fn discover_reference_theme(icons_base_path: &Path, from_theme: &str) -> (PathBu
     let mut candidates = vec!["light".to_string(), "dark".to_string()];
     if let Ok(entries) = fs::read_dir(icons_base_path) {
         for entry in entries.flatten() {
-            if let Ok(file_type) = entry.file_type() {
-                if file_type.is_dir() {
-                    let name = entry.file_name().to_string_lossy().to_string();
-                    if !candidates.contains(&name) {
-                        candidates.push(name);
-                    }
+            if let Ok(file_type) = entry.file_type()
+                && file_type.is_dir()
+            {
+                let name = entry.file_name().to_string_lossy().to_string();
+                if !candidates.contains(&name) {
+                    candidates.push(name);
                 }
             }
         }
@@ -153,15 +153,15 @@ fn handle_create_theme(args: &Cli, theme_name: &str) {
 
     let (ref_dir, ref_theme) = discover_reference_theme(&icons_base_path, &args.from_theme);
     let mut existing_icons = Vec::new();
-    if ref_dir.is_dir() {
-        if let Ok(entries) = fs::read_dir(&ref_dir) {
-            for entry in entries.flatten() {
-                let p = entry.path();
-                if p.extension().is_some_and(|ext| ext == "icns") {
-                    if let Some(stem) = p.file_stem().and_then(|s| s.to_str()) {
-                        existing_icons.push(stem.to_string());
-                    }
-                }
+    if ref_dir.is_dir()
+        && let Ok(entries) = fs::read_dir(&ref_dir)
+    {
+        for entry in entries.flatten() {
+            let p = entry.path();
+            if p.extension().is_some_and(|ext| ext == "icns")
+                && let Some(stem) = p.file_stem().and_then(|s| s.to_str())
+            {
+                existing_icons.push(stem.to_string());
             }
         }
     }
@@ -334,15 +334,15 @@ fn handle_sync_themes(args: &Cli) {
     let mut all_icon_names = HashSet::new();
     for theme_name in themes_data.keys() {
         let t_dir = icons_base_path.join(theme_name);
-        if t_dir.is_dir() {
-            if let Ok(entries) = fs::read_dir(&t_dir) {
-                for entry in entries.flatten() {
-                    let p = entry.path();
-                    if p.extension().is_some_and(|e| e == "icns") {
-                        if let Some(stem) = p.file_stem().and_then(|s| s.to_str()) {
-                            all_icon_names.insert(stem.to_string());
-                        }
-                    }
+        if t_dir.is_dir()
+            && let Ok(entries) = fs::read_dir(&t_dir)
+        {
+            for entry in entries.flatten() {
+                let p = entry.path();
+                if p.extension().is_some_and(|e| e == "icns")
+                    && let Some(stem) = p.file_stem().and_then(|s| s.to_str())
+                {
+                    all_icon_names.insert(stem.to_string());
                 }
             }
         }
@@ -500,7 +500,9 @@ fn resolve_input_source(args: &Cli) -> (IconInfo, String) {
         };
         (icon_info, "custom".to_string())
     } else {
-        eprintln!("⚠️  Error: Must specify an icon source (e.g. macicon slack, --query, --letter, --svg, or --path).");
+        eprintln!(
+            "⚠️  Error: Must specify an icon source (e.g. macicon slack, --query, --letter, --svg, or --path)."
+        );
         std::process::exit(1);
     }
 }
@@ -577,11 +579,11 @@ fn main() {
         preview_path.as_deref(),
     ) {
         Ok(icns_result) => {
-            if let Some(ref app) = args.apply {
-                if let Err(e) = apply_icon_to_app(app, &icns_result, !args.no_dock_restart) {
-                    eprintln!("⚠️  Error: {}", e);
-                    std::process::exit(1);
-                }
+            if let Some(ref app) = args.apply
+                && let Err(e) = apply_icon_to_app(app, &icns_result, !args.no_dock_restart)
+            {
+                eprintln!("⚠️  Error: {}", e);
+                std::process::exit(1);
             }
         }
         Err(e) => {
