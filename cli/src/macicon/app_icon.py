@@ -5,7 +5,7 @@ import subprocess
 import sys
 
 
-def apply_icon_to_app(app_path: str, icns_path: str, restart_dock: bool = True):
+def apply_icon_to_app(app_path: str, icns_path: str, restart_dock: bool = True) -> None:
     """Applies .icns directly to a target .app bundle without breaking code signatures."""
     app_path = os.path.abspath(os.path.expanduser(app_path))
     icns_path = os.path.abspath(os.path.expanduser(icns_path))
@@ -37,6 +37,5 @@ return (current application's NSWorkspace's sharedWorkspace()'s setIcon:imageDat
             print("Restarted Dock.")
     else:
         print(
-            f"\nWarning: Could not set icon directly. If {app_path} is owned by root, run with sudo.",
-            file=sys.stderr
+            f"\nWarning: Could not set icon directly. If {app_path} is owned by root, run with sudo.", file=sys.stderr
         )

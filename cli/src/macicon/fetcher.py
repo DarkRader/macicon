@@ -10,7 +10,7 @@ import urllib.request
 from .constants import COMMON_ALIASES, KNOWN_ICONS
 
 
-def extract_path_from_svg(svg_content: str):
+def extract_path_from_svg(svg_content: str) -> tuple[str, str, str]:
     """Extracts combined <path d='...'>, viewBox, and fill-rule from SVG markup."""
     vb_match = re.search(r'viewBox=["\']([^"\']+)["\']', svg_content)
     if vb_match:
@@ -28,7 +28,8 @@ def extract_path_from_svg(svg_content: str):
         sys.exit('Error: No <path d="..."> found in the SVG.')
     return " ".join(paths), viewbox, fill_rule
 
-def fetch_icon_or_create(query: str, fallback_letter: bool = False) -> dict:
+
+def fetch_icon_or_create(query: str, fallback_letter: bool = False) -> dict[str, str]:
     """Resolves icon from direct URL, built-in vector, Simple Icons, or lettermark."""
     query_str = query.strip()
 

@@ -15,7 +15,17 @@ from .constants import (
 )
 
 
-def build_svg(path_d: str, viewbox: str, bg_top: str, bg_bottom: str, border: str, symbol_color, scale: float, fill_rule: str = "evenodd", shadow: bool = True) -> str:
+def build_svg(
+    path_d: str,
+    viewbox: str,
+    bg_top: str,
+    bg_bottom: str,
+    border: str,
+    symbol_color: str | tuple[str, str],
+    scale: float,
+    fill_rule: str = "evenodd",
+    shadow: bool = True,
+) -> str:
     """Generates standard Apple HIG squircle SVG markup with embedded symbol."""
     vb_parts = [float(x) for x in viewbox.replace(",", " ").split() if x]
     if len(vb_parts) == 4:
@@ -50,7 +60,7 @@ def build_svg(path_d: str, viewbox: str, bg_top: str, bg_bottom: str, border: st
     </linearGradient>"""
         fill_attr = "url(#symbol-grad)"
 
-    svg = f"""<svg width="{CANVAS_SIZE}" height="{CANVAS_SIZE}" viewBox="0 0 {CANVAS_SIZE} {CANVAS_SIZE}" xmlns="http://www.w3.org/2000/svg">
+    return f"""<svg width="{CANVAS_SIZE}" height="{CANVAS_SIZE}" viewBox="0 0 {CANVAS_SIZE} {CANVAS_SIZE}" xmlns="http://www.w3.org/2000/svg">
   <defs>
     <filter id="symbol-shadow" x="-50%" y="-50%" width="200%" height="200%">
       <feDropShadow dx="0" dy="4" stdDeviation="6" flood-color="#000000" flood-opacity="0.18"/>
@@ -71,9 +81,17 @@ def build_svg(path_d: str, viewbox: str, bg_top: str, bg_bottom: str, border: st
     <path fill="{fill_attr}" fill-rule="{fill_rule}" d="{path_d}"/>
   </g>
 </svg>"""
-    return svg
 
-def build_letter_svg(letter: str, bg_top: str, bg_bottom: str, border: str, symbol_color, scale: float, shadow: bool = True) -> str:
+
+def build_letter_svg(
+    letter: str,
+    bg_top: str,
+    bg_bottom: str,
+    border: str,
+    symbol_color: str | tuple[str, str],
+    scale: float,
+    shadow: bool = True,
+) -> str:
     """Generates an Apple-style typography monogram lettermark SVG."""
     font_size = int(400 * scale) if len(letter) == 1 else int(280 * scale)
     y_pos = 635 if len(letter) == 1 else 600
@@ -96,7 +114,7 @@ def build_letter_svg(letter: str, bg_top: str, bg_bottom: str, border: str, symb
     </linearGradient>"""
         fill_attr = "url(#symbol-grad)"
 
-    svg = f"""<svg width="{CANVAS_SIZE}" height="{CANVAS_SIZE}" viewBox="0 0 {CANVAS_SIZE} {CANVAS_SIZE}" xmlns="http://www.w3.org/2000/svg">
+    return f"""<svg width="{CANVAS_SIZE}" height="{CANVAS_SIZE}" viewBox="0 0 {CANVAS_SIZE} {CANVAS_SIZE}" xmlns="http://www.w3.org/2000/svg">
   <defs>
     <filter id="symbol-shadow" x="-50%" y="-50%" width="200%" height="200%">
       <feDropShadow dx="0" dy="4" stdDeviation="6" flood-color="#000000" flood-opacity="0.18"/>
@@ -115,11 +133,16 @@ def build_letter_svg(letter: str, bg_top: str, bg_bottom: str, border: str, symb
   <!-- Centered Lettermark -->
   <text x="512" y="{y_pos}" font-family="-apple-system, 'SF Pro Display', system-ui, sans-serif" font-size="{font_size}" font-weight="800" text-anchor="middle" fill="{fill_attr}"{filter_attr}>{letter}</text>
 </svg>"""
-    return svg
+
 
 def render_and_mask(svg_path: str, temp_dir: str, shadow: bool = True) -> str:
     """Renders SVG with QuickLook and strictly masks outer border to transparent alpha."""
-    subprocess.run(["qlmanage", "-t", "-s", "1024", "-o", temp_dir, svg_path], check=True, stdout=subprocess.DEVNULL, stderr=subprocess.DEVNULL)
+    subprocess.run(
+        ["qlmanage", "-t", "-s", "1024", "-o", temp_dir, svg_path],
+        check=True,
+        stdout=subprocess.DEVNULL,
+        stderr=subprocess.DEVNULL,
+    )
     rendered_png = os.path.join(temp_dir, f"{os.path.basename(svg_path)}.png")
     masked_png = os.path.join(temp_dir, "masked.png")
 
@@ -184,7 +207,8 @@ try! data.write(to: outURL)
     subprocess.run(["swift", swift_script, rendered_png, masked_png, shadow_arg], check=True)
     return masked_png
 
-def compile_icns(masked_png: str, out_icns: str, temp_dir: str):
+
+def compile_icns(masked_png: str, out_icns: str, temp_dir: str) -> None:
     """Constructs multi-resolution iconset and compiles into .icns bundle."""
     iconset_dir = os.path.join(temp_dir, "App.iconset")
     os.makedirs(iconset_dir, exist_ok=True)
@@ -204,7 +228,9 @@ def compile_icns(masked_png: str, out_icns: str, temp_dir: str):
 
     for sz, filename in sizes:
         dest = os.path.join(iconset_dir, filename)
-        subprocess.run(["sips", "-z", str(sz), str(sz), masked_png, "--out", dest], check=True, stdout=subprocess.DEVNULL)
+        subprocess.run(
+            ["sips", "-z", str(sz), str(sz), masked_png, "--out", dest], check=True, stdout=subprocess.DEVNULL
+        )
 
     out_dir = os.path.dirname(os.path.abspath(out_icns))
     if out_dir:
@@ -213,31 +239,42 @@ def compile_icns(masked_png: str, out_icns: str, temp_dir: str):
     subprocess.run(["iconutil", "-c", "icns", iconset_dir, "-o", out_icns], check=True)
     print(f"Compiled ICNS: {out_icns}")
 
-def generate_single_icon(icon_info: dict, out_icns: str, bg_top: str, bg_bottom: str, border: str, symbol_color, scale: float = 1.25, shadow: bool = True, preview_path: str | None = None) -> str:
+
+def generate_single_icon(
+    icon_info: dict[str, str],
+    out_icns: str,
+    bg_top: str,
+    bg_bottom: str,
+    border: str,
+    symbol_color: str | tuple[str, str],
+    scale: float = 1.25,
+    shadow: bool = True,
+    preview_path: str | None = None,
+) -> str:
     """Generates a complete squircle .icns package from vector info."""
     temp_dir = tempfile.mkdtemp(prefix="macicon_")
     try:
-        if icon_info["type"] == "letter":
+        if str(icon_info.get("type")) == "letter":
             svg_markup = build_letter_svg(
-                icon_info["letter"],
+                str(icon_info["letter"]),
                 bg_top,
                 bg_bottom,
                 border,
                 symbol_color,
                 scale,
-                shadow=shadow
+                shadow=shadow,
             )
         else:
             svg_markup = build_svg(
-                icon_info["path_d"],
-                icon_info["viewbox"],
+                str(icon_info["path_d"]),
+                str(icon_info["viewbox"]),
                 bg_top,
                 bg_bottom,
                 border,
                 symbol_color,
                 scale,
-                icon_info.get("fill_rule", "evenodd"),
-                shadow=shadow
+                str(icon_info.get("fill_rule", "evenodd")),
+                shadow=shadow,
             )
 
         svg_file = os.path.join(temp_dir, "composed.svg")

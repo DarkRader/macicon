@@ -1,0 +1,41 @@
+line-length = 120
+exclude = [".venv"]
+src = ["src"]
+
+[lint]
+select = [
+    "A",     # flake8-builtins
+    "ARG",   # flake8-unused-arguments
+    "ASYNC", # async best practices
+    "B",     # flake8-bugbear
+    "BLE",   # flake8-blind-except
+    "C4",    # flake8-comprehensions
+    "C90",   # mccabe complexity
+    "COM",   # flake8-commas
+    "E",     # pycodestyle errors
+    "ERA",   # eradicate
+    "EXE",   # flake8-executable
+    "F",     # pyflakes
+    "FLY",   # flynt
+    "I",     # isort
+    "ICN",   # flake8-import-conventions
+    "PIE",   # flake8-pie
+    "Q",     # flake8-quotes
+    "RET",   # flake8-return
+    "RUF",   # Ruff-specific rules
+    "SIM",   # flake8-simplify
+    "UP",    # pyupgrade
+    "W",     # pycodestyle warnings
+]
+ignore = [
+    "COM812", # missing-trailing-comma
+    "E501",   # line-too-long (SVG path data)
+]
+
+[lint.mccabe]
+max-complexity = 20
+
+[format]
+quote-style = "double"
+line-ending = "auto"
+indent-style = "space"

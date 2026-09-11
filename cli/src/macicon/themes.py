@@ -110,6 +110,7 @@ SYMBOL_SHORTCUTS = {
     "cyan": "#00FFFF",
 }
 
+
 def is_color_dark(hex_color: str) -> bool:
     """Returns True if the hex color has a dark perceived luminance."""
     hex_color = hex_color.lstrip("#")
@@ -124,7 +125,13 @@ def is_color_dark(hex_color: str) -> bool:
     except ValueError:
         return False
 
-def compute_styling(theme: str, bg: str | None = None, color: str | None = None, border_color: str | None = None):
+
+def compute_styling(
+    theme: str,
+    bg: str | None = None,
+    color: str | None = None,
+    border_color: str | None = None,
+) -> tuple[str, str, str, str | tuple[str, str]]:
     """Resolves background gradient, border color, and symbol color."""
     preset = THEME_PRESETS.get(theme, THEME_PRESETS["light"])
     bg_top = preset["bg_top"]
@@ -161,6 +168,7 @@ def compute_styling(theme: str, bg: str | None = None, color: str | None = None,
 
     return bg_top, bg_bottom, border, symbol_color
 
+
 def get_icons_base_dir(custom_path: str | None = None) -> str:
     """Resolves base directory for icons and themes manifest."""
     if custom_path:
@@ -177,9 +185,10 @@ def get_icons_base_dir(custom_path: str | None = None) -> str:
     # Default to ./icons
     return os.path.abspath("icons")
 
-def load_themes_manifest(manifest_path: str, icons_base_dir: str) -> dict:
+
+def load_themes_manifest(manifest_path: str, icons_base_dir: str) -> dict[str, dict[str, object]]:
     """Loads registered themes manifest or creates standard default definitions."""
-    data = {}
+    data: dict[str, dict[str, object]] = {}
     if os.path.isfile(manifest_path):
         try:
             with open(manifest_path, encoding="utf-8") as f:
@@ -207,7 +216,8 @@ def load_themes_manifest(manifest_path: str, icons_base_dir: str) -> dict:
         }
     return data
 
-def save_themes_manifest(manifest_path: str, data: dict):
+
+def save_themes_manifest(manifest_path: str, data: dict[str, dict[str, object]]) -> None:
     """Saves themes manifest to disk as formatted JSON."""
     try:
         os.makedirs(os.path.dirname(os.path.abspath(manifest_path)), exist_ok=True)
