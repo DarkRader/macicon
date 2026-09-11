@@ -170,17 +170,17 @@ fn search_online_icons(candidate_slugs: &[String], slug: &str) -> Option<IconInf
         ];
 
         for (source_name, url) in sources {
-            if let Ok(resp) = agent.get(&url).call() {
-                if let Ok(content) = resp.into_string() {
-                    println!("Found icon on {}: {}", source_name, url);
-                    if let Ok((path_d, viewbox, fill_rule)) = extract_path_from_svg(&content) {
-                        return Some(IconInfo::Path {
-                            name: slug.to_string(),
-                            path_d,
-                            viewbox,
-                            fill_rule,
-                        });
-                    }
+            if let Ok(resp) = agent.get(&url).call()
+                && let Ok(content) = resp.into_string()
+            {
+                println!("Found icon on {}: {}", source_name, url);
+                if let Ok((path_d, viewbox, fill_rule)) = extract_path_from_svg(&content) {
+                    return Some(IconInfo::Path {
+                        name: slug.to_string(),
+                        path_d,
+                        viewbox,
+                        fill_rule,
+                    });
                 }
             }
         }
@@ -203,14 +203,14 @@ pub fn fetch_icon_or_create(query: &str, fallback_letter: bool) -> IconInfo {
     let mut slug = query_str.to_lowercase().replace([' ', '-', '_'], "");
     let slug_hyphen = query_str.to_lowercase().replace([' ', '_'], "-");
 
-    if let Some(&(_, alias)) = COMMON_ALIASES.iter().find(|(k, _)| *k == slug) {
-        if KNOWN_ICONS.iter().any(|(k, _)| *k == alias) {
-            slug = alias.to_string();
-        }
-    } else if let Some(&(_, alias)) = COMMON_ALIASES.iter().find(|(k, _)| *k == slug_hyphen) {
-        if KNOWN_ICONS.iter().any(|(k, _)| *k == alias) {
-            slug = alias.to_string();
-        }
+    if let Some(&(_, alias)) = COMMON_ALIASES.iter().find(|(k, _)| *k == slug)
+        && KNOWN_ICONS.iter().any(|(k, _)| *k == alias)
+    {
+        slug = alias.to_string();
+    } else if let Some(&(_, alias)) = COMMON_ALIASES.iter().find(|(k, _)| *k == slug_hyphen)
+        && KNOWN_ICONS.iter().any(|(k, _)| *k == alias)
+    {
+        slug = alias.to_string();
     }
 
     if let Some((_, icon)) = KNOWN_ICONS.iter().find(|(k, _)| *k == slug) {

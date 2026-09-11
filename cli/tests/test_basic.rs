@@ -1,6 +1,6 @@
 use macicon::fetcher::extract_path_from_svg;
 use macicon::renderer::build_letter_svg;
-use macicon::themes::{compute_styling, is_color_dark, IconStyle, THEME_PRESETS};
+use macicon::themes::{IconStyle, THEME_PRESETS, compute_styling, is_color_dark};
 
 #[test]
 fn test_theme_presets() {

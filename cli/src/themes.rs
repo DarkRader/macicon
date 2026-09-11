@@ -319,12 +319,11 @@ pub fn load_themes_manifest(
     icons_base_dir: &Path,
 ) -> HashMap<String, ThemeConfig> {
     let mut data: HashMap<String, ThemeConfig> = HashMap::new();
-    if manifest_path.is_file() {
-        if let Ok(content) = fs::read_to_string(manifest_path) {
-            if let Ok(parsed) = serde_json::from_str::<HashMap<String, ThemeConfig>>(&content) {
-                data = parsed;
-            }
-        }
+    if manifest_path.is_file()
+        && let Ok(content) = fs::read_to_string(manifest_path)
+        && let Ok(parsed) = serde_json::from_str::<HashMap<String, ThemeConfig>>(&content)
+    {
+        data = parsed;
     }
 
     if !data.contains_key("light") && icons_base_dir.join("light").is_dir() {
