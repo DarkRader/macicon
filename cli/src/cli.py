@@ -1,10 +1,10 @@
 """Command-line interface and dispatch for macicon."""
 
 import argparse
-import os
 import shutil
 import subprocess
 import sys
+from pathlib import Path
 
 from app_icon import apply_icon_to_app
 from fetcher import extract_path_from_svg, fetch_icon_or_create
@@ -33,7 +33,9 @@ def parse_args() -> argparse.Namespace:
     source_group.add_argument("--svg", "-s", help="Path to a local SVG file")
     source_group.add_argument("--path", "-p", help="Direct SVG path string d='...'")
     source_group.add_argument(
-        "--letter", "-l", help="Generate an Apple-style typography lettermark monogram (e.g. 'S', 'G', 'AI')"
+        "--letter",
+        "-l",
+        help="Generate an Apple-style typography lettermark monogram (e.g. 'S', 'G', 'AI')",
     )
     source_group.add_argument(
         "--icns",
@@ -66,12 +68,17 @@ def parse_args() -> argparse.Namespace:
         help="Reference theme to discover icons from when using --create-theme (default: 'light')",
     )
     parser.add_argument(
-        "--icons-dir", help="Base directory containing theme folders (default: './icons' or auto-detected 'nix/icons')"
+        "--icons-dir",
+        help="Base directory containing theme folders (default: './icons' or auto-detected 'nix/icons')",
     )
 
     # Style options
     parser.add_argument(
-        "--theme", "-t", choices=list(THEME_PRESETS.keys()), default="light", help="Base theme preset (default: light)"
+        "--theme",
+        "-t",
+        choices=list(THEME_PRESETS.keys()),
+        default="light",
+        help="Base theme preset (default: light)",
     )
     parser.add_argument(
         "--bg",
@@ -97,12 +104,17 @@ def parse_args() -> argparse.Namespace:
         help="Scale multiplier for the symbol (default: 1.25, tuned for macOS Dock)",
     )
     parser.add_argument(
-        "--viewbox", "-v", default="0 0 24 24", help="SVG viewBox when using --path (default: '0 0 24 24')"
+        "--viewbox",
+        "-v",
+        default="0 0 24 24",
+        help="SVG viewBox when using --path (default: '0 0 24 24')",
     )
 
     # Output & Action options
     parser.add_argument(
-        "--out", "-o", help="Destination path for .icns (optional: auto-derived from query or app name)"
+        "--out",
+        "-o",
+        help="Destination path for .icns (optional: auto-derived from query or app name)",
     )
     parser.add_argument(
         "--preview",
@@ -111,9 +123,13 @@ def parse_args() -> argparse.Namespace:
         default=None,
         help="Generate a 1024x1024 PNG preview (optional custom path, or auto /tmp/<name>-preview.png)",
     )
-    parser.add_argument("--apply", "-a", help="Target .app bundle path or app name to immediately apply the icon to")
     parser.add_argument(
-        "--no-dock-restart", action="store_true", help="Do not restart the Dock after applying the icon"
+        "--apply", "-a", help="Target .app bundle path or app name to immediately apply the icon to"
+    )
+    parser.add_argument(
+        "--no-dock-restart",
+        action="store_true",
+        help="Do not restart the Dock after applying the icon",
     )
 
     return parser.parse_args()
@@ -121,39 +137,43 @@ def parse_args() -> argparse.Namespace:
 
 def handle_create_theme(args: argparse.Namespace) -> None:
     theme_name = args.create_theme.strip().lower()
-    icons_base_dir = get_icons_base_dir(args.icons_dir)
-    target_dir = os.path.join(icons_base_dir, theme_name)
-    os.makedirs(target_dir, exist_ok=True)
+    icons_base_path = Path(get_icons_base_dir(args.icons_dir))
+    target_dir = icons_base_path / theme_name
+    target_dir.mkdir(parents=True, exist_ok=True)
 
-    ref_theme = args.from_theme if args.from_theme else "light"
-    ref_dir = os.path.join(icons_base_dir, ref_theme)
-    if not os.path.isdir(ref_dir):
+    ref_theme = args.from_theme or "light"
+    ref_dir = icons_base_path / ref_theme
+    if not ref_dir.is_dir():
         candidates = ["light", "dark"] + [
-            d
-            for d in os.listdir(icons_base_dir)
-            if os.path.isdir(os.path.join(icons_base_dir, d)) and not d.startswith(".")
+            p.name for p in icons_base_path.iterdir() if p.is_dir() and not p.name.startswith(".")
         ]
         for c in candidates:
-            c_dir = os.path.join(icons_base_dir, c)
-            if os.path.isdir(c_dir) and any(f.endswith(".icns") for f in os.listdir(c_dir)):
+            c_dir = icons_base_path / c
+            if c_dir.is_dir() and any(f.suffix == ".icns" for f in c_dir.iterdir()):
                 ref_dir = c_dir
                 ref_theme = c
                 break
 
-    if not os.path.isdir(ref_dir):
-        sys.exit(f"Error: Could not find reference theme directory under '{icons_base_dir}'.")
+    if not ref_dir.is_dir():
+        sys.exit(f"⚠️  Error: Could not find reference theme directory under '{icons_base_path}'.")
 
     existing_icons = sorted(
-        [os.path.splitext(f)[0] for f in os.listdir(ref_dir) if f.endswith(".icns") and not f.startswith(".")]
+        [
+            f.stem
+            for f in ref_dir.iterdir()
+            if f.is_file() and f.suffix == ".icns" and not f.name.startswith(".")
+        ]
     )
 
     if not existing_icons:
-        sys.exit(f"Error: No .icns icons found in reference theme '{ref_theme}' ({ref_dir}).")
+        sys.exit(f"⚠️  Error: No .icns icons found in reference theme '{ref_theme}' ({ref_dir}).")
 
     if theme_name in THEME_PRESETS and not args.bg and args.theme == "light":
         args.theme = theme_name
 
-    bg_top, bg_bottom, border, symbol_color = compute_styling(args.theme, args.bg, args.color, args.border_color)
+    bg_top, bg_bottom, border, symbol_color = compute_styling(
+        args.theme, args.bg, args.color, args.border_color
+    )
     scale = args.scale
     shadow = args.shadow
 
@@ -167,8 +187,8 @@ def handle_create_theme(args: argparse.Namespace) -> None:
     print(f"   Shadow           : {'Enabled' if shadow else 'Disabled (flat)'}")
     print(f"   Scale            : {scale}\n")
 
-    themes_file = os.path.join(icons_base_dir, "themes.json")
-    themes_data = load_themes_manifest(themes_file, icons_base_dir)
+    themes_file = icons_base_path / "themes.json"
+    themes_data = load_themes_manifest(str(themes_file), str(icons_base_path))
     themes_data[theme_name] = {
         "bg_top": bg_top,
         "bg_bottom": bg_bottom,
@@ -177,19 +197,23 @@ def handle_create_theme(args: argparse.Namespace) -> None:
         "shadow": shadow,
         "scale": scale,
     }
-    save_themes_manifest(themes_file, themes_data)
+    save_themes_manifest(str(themes_file), themes_data)
 
     success_count = 0
     failed_icons = []
 
     for i, icon_name in enumerate(existing_icons, start=1):
-        print(f"   [{i:2d}/{len(existing_icons)}] Generating {icon_name}.icns ... ", end="", flush=True)
-        out_file = os.path.join(target_dir, f"{icon_name}.icns")
+        print(
+            f"   [{i:2d}/{len(existing_icons)}] Generating {icon_name}.icns ... ",
+            end="",
+            flush=True,
+        )
+        out_file = target_dir / f"{icon_name}.icns"
         try:
             icon_info = fetch_icon_or_create(icon_name, fallback_letter=True)
             generate_single_icon(
                 icon_info=icon_info,
-                out_icns=out_file,
+                out_icns=str(out_file),
                 bg_top=bg_top,
                 bg_bottom=bg_bottom,
                 border=border,
@@ -211,16 +235,16 @@ def handle_create_theme(args: argparse.Namespace) -> None:
 
 
 def handle_all_themes(args: argparse.Namespace, icon_info: dict[str, str], base_name: str) -> None:
-    icons_base_dir = get_icons_base_dir(args.icons_dir)
-    themes_file = os.path.join(icons_base_dir, "themes.json")
-    themes_data = load_themes_manifest(themes_file, icons_base_dir)
+    icons_base_path = Path(get_icons_base_dir(args.icons_dir))
+    themes_file = icons_base_path / "themes.json"
+    themes_data = load_themes_manifest(str(themes_file), str(icons_base_path))
 
     print(f"\n🌐 Generating icon '{base_name}.icns' across {len(themes_data)} registered theme(s):")
     success_count = 0
     for theme_name, cfg in themes_data.items():
-        theme_dir = os.path.join(icons_base_dir, theme_name)
-        os.makedirs(theme_dir, exist_ok=True)
-        out_file = os.path.join(theme_dir, f"{base_name}.icns")
+        theme_dir = icons_base_path / theme_name
+        theme_dir.mkdir(parents=True, exist_ok=True)
+        out_file = theme_dir / f"{base_name}.icns"
 
         bg_top = str(cfg.get("bg_top", "#FFFFFF"))
         bg_bottom = str(cfg.get("bg_bottom", bg_top))
@@ -233,7 +257,7 @@ def handle_all_themes(args: argparse.Namespace, icon_info: dict[str, str], base_
         try:
             generate_single_icon(
                 icon_info=icon_info,
-                out_icns=out_file,
+                out_icns=str(out_file),
                 bg_top=bg_top,
                 bg_bottom=bg_bottom,
                 border=border,
@@ -246,24 +270,26 @@ def handle_all_themes(args: argparse.Namespace, icon_info: dict[str, str], base_
         except Exception as e:  # noqa: BLE001
             print(f"✗ ({e})")
 
-    print(f"\n✨ Successfully generated '{base_name}.icns' across {success_count}/{len(themes_data)} themes.\n")
+    print(
+        f"\n✨ Successfully generated '{base_name}.icns' across {success_count}/{len(themes_data)} themes.\n"
+    )
 
 
 def handle_sync_themes(args: argparse.Namespace) -> None:
-    icons_base_dir = get_icons_base_dir(args.icons_dir)
-    themes_file = os.path.join(icons_base_dir, "themes.json")
-    themes_data = load_themes_manifest(themes_file, icons_base_dir)
+    icons_base_path = Path(get_icons_base_dir(args.icons_dir))
+    themes_file = icons_base_path / "themes.json"
+    themes_data = load_themes_manifest(str(themes_file), str(icons_base_path))
 
     all_icon_names = set()
     for theme_name in themes_data:
-        t_dir = os.path.join(icons_base_dir, theme_name)
-        if os.path.isdir(t_dir):
-            for f in os.listdir(t_dir):
-                if f.endswith(".icns") and not f.startswith("."):
-                    all_icon_names.add(os.path.splitext(f)[0])
+        t_dir = icons_base_path / theme_name
+        if t_dir.is_dir():
+            for f in t_dir.iterdir():
+                if f.is_file() and f.suffix == ".icns" and not f.name.startswith("."):
+                    all_icon_names.add(f.stem)
 
     if not all_icon_names:
-        sys.exit(f"Error: No .icns icons found across any themes in '{icons_base_dir}'.")
+        sys.exit(f"⚠️  Error: No .icns icons found across any themes in '{icons_base_path}'.")
 
     all_icons_list = sorted(all_icon_names)
     print(
@@ -272,8 +298,8 @@ def handle_sync_themes(args: argparse.Namespace) -> None:
 
     for theme_name, cfg in themes_data.items():
         print(f"📦 Theme: {theme_name}")
-        t_dir = os.path.join(icons_base_dir, theme_name)
-        os.makedirs(t_dir, exist_ok=True)
+        t_dir = icons_base_path / theme_name
+        t_dir.mkdir(parents=True, exist_ok=True)
         bg_top = str(cfg.get("bg_top", "#FFFFFF"))
         bg_bottom = str(cfg.get("bg_bottom", bg_top))
         border = str(cfg.get("border", "#D8D9DC"))
@@ -282,14 +308,14 @@ def handle_sync_themes(args: argparse.Namespace) -> None:
         shadow = bool(cfg.get("shadow", True))
 
         for icon_name in all_icons_list:
-            out_file = os.path.join(t_dir, f"{icon_name}.icns")
-            if not os.path.exists(out_file):
+            out_file = t_dir / f"{icon_name}.icns"
+            if not out_file.exists():
                 print(f"   Adding missing {icon_name}.icns ... ", end="", flush=True)
                 try:
                     icon_info = fetch_icon_or_create(icon_name, fallback_letter=True)
                     generate_single_icon(
                         icon_info=icon_info,
-                        out_icns=out_file,
+                        out_icns=str(out_file),
                         bg_top=bg_top,
                         bg_bottom=bg_bottom,
                         border=border,
@@ -315,33 +341,37 @@ def main() -> None:
         return
 
     if args.icns:
-        icns_path = os.path.abspath(os.path.expanduser(args.icns))
-        if not os.path.exists(icns_path):
-            sys.exit(f"Error: .icns file not found at '{icns_path}'")
+        icns_path = Path(args.icns).expanduser().resolve()
+        if not icns_path.exists():
+            sys.exit(f"⚠️  Error: .icns file not found at '{icns_path}'")
 
-        base_name = os.path.splitext(os.path.basename(icns_path))[0]
+        base_name = icns_path.stem
 
         if args.preview:
-            preview_path = (
-                f"/tmp/{base_name}-preview.png"
+            icns_preview = (
+                Path(f"/tmp/{base_name}-preview.png")
                 if args.preview is True
-                else os.path.abspath(os.path.expanduser(args.preview))
+                else Path(args.preview).expanduser().resolve()
             )
             subprocess.run(
-                ["sips", "-s", "format", "png", icns_path, "--out", preview_path], check=True, stdout=subprocess.DEVNULL
+                ["sips", "-s", "format", "png", str(icns_path), "--out", str(icns_preview)],
+                check=True,
+                stdout=subprocess.DEVNULL,
             )
-            print(f"Saved PNG preview: {preview_path}")
+            print(f"Saved PNG preview: {icns_preview}")
 
         if args.out:
-            out_dest = os.path.abspath(os.path.expanduser(args.out))
-            os.makedirs(os.path.dirname(out_dest), exist_ok=True)
+            out_dest = Path(args.out).expanduser().resolve()
+            out_dest.parent.mkdir(parents=True, exist_ok=True)
             shutil.copy(icns_path, out_dest)
             print(f"Copied icon to: {out_dest}")
 
         if args.apply:
-            apply_icon_to_app(args.apply, icns_path, restart_dock=not args.no_dock_restart)
+            apply_icon_to_app(args.apply, str(icns_path), restart_dock=not args.no_dock_restart)
         elif not args.preview and not args.out:
-            print(f"Icon verified at '{icns_path}'. Pass --apply <app_path> to apply it to an application.")
+            print(
+                f"Icon verified at '{icns_path}'. Pass --apply <app_path> to apply it to an application."
+            )
         return
 
     # Determine input source
@@ -352,13 +382,19 @@ def main() -> None:
         icon_info = {"type": "letter", "letter": args.letter}
         base_name = f"letter-{args.letter.lower()}"
     elif args.svg:
-        with open(args.svg, encoding="utf-8") as f:
+        svg_path = Path(args.svg)
+        with svg_path.open(encoding="utf-8") as f:
             svg_content = f.read()
         path_d, viewbox, fill_rule = extract_path_from_svg(svg_content)
         icon_info = {"type": "path", "path_d": path_d, "viewbox": viewbox, "fill_rule": fill_rule}
-        base_name = os.path.splitext(os.path.basename(args.svg))[0].lower()
+        base_name = svg_path.stem.lower()
     else:
-        icon_info = {"type": "path", "path_d": args.path, "viewbox": args.viewbox, "fill_rule": "evenodd"}
+        icon_info = {
+            "type": "path",
+            "path_d": args.path,
+            "viewbox": args.viewbox,
+            "fill_rule": "evenodd",
+        }
         base_name = "custom"
 
     if args.all_themes:
@@ -367,23 +403,25 @@ def main() -> None:
 
     # Automatically derive destination path if omitted
     if not args.out:
-        icons_dir = get_icons_base_dir(args.icons_dir)
-        theme_dir = os.path.join(icons_dir, args.theme)
-        if os.path.isdir(theme_dir):
-            args.out = os.path.join(theme_dir, f"{base_name}.icns")
+        icons_dir = Path(get_icons_base_dir(args.icons_dir))
+        theme_dir = icons_dir / args.theme
+        if theme_dir.is_dir():
+            args.out = str(theme_dir / f"{base_name}.icns")
         elif args.apply:
-            app_stem = os.path.splitext(os.path.basename(args.apply))[0].lower().replace(" ", "-")
+            app_stem = Path(args.apply).stem.lower().replace(" ", "-")
             args.out = f"/tmp/{app_stem}.icns"
         else:
             args.out = f"./{base_name}.icns"
 
-    preview_path = None
+    preview_path: str | None = None
     if args.preview is True:
         preview_path = f"/tmp/{base_name}-preview.png"
     elif isinstance(args.preview, str):
-        preview_path = os.path.abspath(os.path.expanduser(args.preview))
+        preview_path = str(Path(args.preview).expanduser().resolve())
 
-    bg_top, bg_bottom, border, symbol_color = compute_styling(args.theme, args.bg, args.color, args.border_color)
+    bg_top, bg_bottom, border, symbol_color = compute_styling(
+        args.theme, args.bg, args.color, args.border_color
+    )
 
     out_icns = generate_single_icon(
         icon_info=icon_info,

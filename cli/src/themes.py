@@ -1,8 +1,8 @@
 """Theme management, presets, and color parsing for macicon."""
 
 import json
-import os
 import sys
+from pathlib import Path
 
 THEME_PRESETS = {
     "light": {
@@ -121,9 +121,10 @@ def is_color_dark(hex_color: str) -> bool:
     try:
         r, g, b = int(hex_color[0:2], 16), int(hex_color[2:4], 16), int(hex_color[4:6], 16)
         luminance = 0.299 * r + 0.587 * g + 0.114 * b
-        return luminance < 100
     except ValueError:
         return False
+    else:
+        return luminance < 100
 
 
 def compute_styling(
@@ -155,11 +156,14 @@ def compute_styling(
 
     if border_color:
         border = border_color
-    else:
-        if is_color_dark(bg_top) or is_color_dark(bg_bottom):
-            border = "#28282C" if bg_top.lower() in ("#161618", "#000000", "#0d0d0e") or theme == "black" else "#3A3B40"
-        elif bg and bg_top == bg_bottom:
-            border = bg_top
+    elif is_color_dark(bg_top) or is_color_dark(bg_bottom):
+        border = (
+            "#28282C"
+            if bg_top.lower() in ("#161618", "#000000", "#0d0d0e") or theme == "black"
+            else "#3A3B40"
+        )
+    elif bg and bg_top == bg_bottom:
+        border = bg_top
 
     if color:
         raw_color = color.strip()
@@ -172,31 +176,33 @@ def compute_styling(
 def get_icons_base_dir(custom_path: str | None = None) -> str:
     """Resolves base directory for icons and themes manifest."""
     if custom_path:
-        return os.path.abspath(os.path.expanduser(custom_path))
+        return str(Path(custom_path).expanduser().resolve())
 
     # Check current directory
-    if os.path.isdir("icons"):
-        return os.path.abspath("icons")
+    if Path("icons").is_dir():
+        return str(Path("icons").resolve())
 
     # Check nix/icons if run inside a nix/dotfiles workspace
-    if os.path.isdir("nix/icons"):
-        return os.path.abspath("nix/icons")
+    if Path("nix/icons").is_dir():
+        return str(Path("nix/icons").resolve())
 
     # Default to ./icons
-    return os.path.abspath("icons")
+    return str(Path("icons").resolve())
 
 
 def load_themes_manifest(manifest_path: str, icons_base_dir: str) -> dict[str, dict[str, object]]:
     """Loads registered themes manifest or creates standard default definitions."""
     data: dict[str, dict[str, object]] = {}
-    if os.path.isfile(manifest_path):
+    path = Path(manifest_path)
+    base_dir = Path(icons_base_dir)
+    if path.is_file():
         try:
-            with open(manifest_path, encoding="utf-8") as f:
+            with path.open(encoding="utf-8") as f:
                 data = json.load(f)
         except (OSError, json.JSONDecodeError):
             data = {}
 
-    if "light" not in data and os.path.isdir(os.path.join(icons_base_dir, "light")):
+    if "light" not in data and (base_dir / "light").is_dir():
         data["light"] = {
             "bg_top": "#FFFFFF",
             "bg_bottom": "#EBECEF",
@@ -205,7 +211,7 @@ def load_themes_manifest(manifest_path: str, icons_base_dir: str) -> dict[str, d
             "shadow": True,
             "scale": 1.25,
         }
-    if "dark" not in data and os.path.isdir(os.path.join(icons_base_dir, "dark")):
+    if "dark" not in data and (base_dir / "dark").is_dir():
         data["dark"] = {
             "bg_top": "#161618",
             "bg_bottom": "#0D0D0E",
@@ -220,8 +226,9 @@ def load_themes_manifest(manifest_path: str, icons_base_dir: str) -> dict[str, d
 def save_themes_manifest(manifest_path: str, data: dict[str, dict[str, object]]) -> None:
     """Saves themes manifest to disk as formatted JSON."""
     try:
-        os.makedirs(os.path.dirname(os.path.abspath(manifest_path)), exist_ok=True)
-        with open(manifest_path, "w", encoding="utf-8") as f:
+        path = Path(manifest_path).resolve()
+        path.parent.mkdir(parents=True, exist_ok=True)
+        with path.open("w", encoding="utf-8") as f:
             json.dump(data, f, indent=2)
             f.write("\n")
     except OSError as e:

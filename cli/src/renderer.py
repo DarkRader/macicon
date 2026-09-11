@@ -1,9 +1,9 @@
 """SVG composition, Apple squircle masking, and ICNS compilation for macicon."""
 
-import os
 import shutil
 import subprocess
 import tempfile
+from pathlib import Path
 
 from constants import (
     CANVAS_SIZE,
@@ -137,17 +137,18 @@ def build_letter_svg(
 
 def render_and_mask(svg_path: str, temp_dir: str, shadow: bool = True) -> str:
     """Renders SVG with QuickLook and strictly masks outer border to transparent alpha."""
+    t_dir = Path(temp_dir)
     subprocess.run(
-        ["qlmanage", "-t", "-s", "1024", "-o", temp_dir, svg_path],
+        ["qlmanage", "-t", "-s", "1024", "-o", str(t_dir), svg_path],
         check=True,
         stdout=subprocess.DEVNULL,
         stderr=subprocess.DEVNULL,
     )
-    rendered_png = os.path.join(temp_dir, f"{os.path.basename(svg_path)}.png")
-    masked_png = os.path.join(temp_dir, "masked.png")
+    rendered_png = t_dir / f"{Path(svg_path).name}.png"
+    masked_png = t_dir / "masked.png"
 
-    swift_script = os.path.join(temp_dir, "mask.swift")
-    with open(swift_script, "w", encoding="utf-8") as f:
+    swift_script = t_dir / "mask.swift"
+    with swift_script.open("w", encoding="utf-8") as f:
         f.write("""import Cocoa
 
 let srcURL = URL(fileURLWithPath: CommandLine.arguments[1])
@@ -204,14 +205,18 @@ let data = rep.representation(using: NSBitmapImageRep.FileType.png, properties: 
 try! data.write(to: outURL)
 """)
     shadow_arg = "1" if shadow else "0"
-    subprocess.run(["swift", swift_script, rendered_png, masked_png, shadow_arg], check=True)
-    return masked_png
+    subprocess.run(
+        ["swift", str(swift_script), str(rendered_png), str(masked_png), shadow_arg],
+        check=True,
+    )
+    return str(masked_png)
 
 
 def compile_icns(masked_png: str, out_icns: str, temp_dir: str) -> None:
     """Constructs multi-resolution iconset and compiles into .icns bundle."""
-    iconset_dir = os.path.join(temp_dir, "App.iconset")
-    os.makedirs(iconset_dir, exist_ok=True)
+    t_dir = Path(temp_dir)
+    iconset_dir = t_dir / "App.iconset"
+    iconset_dir.mkdir(parents=True, exist_ok=True)
 
     sizes = [
         (16, "icon_16x16.png"),
@@ -227,17 +232,18 @@ def compile_icns(masked_png: str, out_icns: str, temp_dir: str) -> None:
     ]
 
     for sz, filename in sizes:
-        dest = os.path.join(iconset_dir, filename)
+        dest = iconset_dir / filename
         subprocess.run(
-            ["sips", "-z", str(sz), str(sz), masked_png, "--out", dest], check=True, stdout=subprocess.DEVNULL
+            ["sips", "-z", str(sz), str(sz), masked_png, "--out", str(dest)],
+            check=True,
+            stdout=subprocess.DEVNULL,
         )
 
-    out_dir = os.path.dirname(os.path.abspath(out_icns))
-    if out_dir:
-        os.makedirs(out_dir, exist_ok=True)
+    target_icns = Path(out_icns).expanduser().resolve()
+    target_icns.parent.mkdir(parents=True, exist_ok=True)
 
-    subprocess.run(["iconutil", "-c", "icns", iconset_dir, "-o", out_icns], check=True)
-    print(f"Compiled ICNS: {out_icns}")
+    subprocess.run(["iconutil", "-c", "icns", str(iconset_dir), "-o", str(target_icns)], check=True)
+    print(f"Compiled ICNS: {target_icns}")
 
 
 def generate_single_icon(
@@ -253,6 +259,7 @@ def generate_single_icon(
 ) -> str:
     """Generates a complete squircle .icns package from vector info."""
     temp_dir = tempfile.mkdtemp(prefix="macicon_")
+    t_dir = Path(temp_dir)
     try:
         if str(icon_info.get("type")) == "letter":
             svg_markup = build_letter_svg(
@@ -277,18 +284,18 @@ def generate_single_icon(
                 shadow=shadow,
             )
 
-        svg_file = os.path.join(temp_dir, "composed.svg")
-        with open(svg_file, "w", encoding="utf-8") as f:
+        svg_file = t_dir / "composed.svg"
+        with svg_file.open("w", encoding="utf-8") as f:
             f.write(svg_markup)
 
-        masked_png = render_and_mask(svg_file, temp_dir, shadow=shadow)
+        masked_png = render_and_mask(str(svg_file), str(t_dir), shadow=shadow)
 
         if preview_path:
             shutil.copy(masked_png, preview_path)
             print(f"Saved PNG preview: {preview_path}")
 
-        out_icns = os.path.abspath(os.path.expanduser(out_icns))
-        compile_icns(masked_png, out_icns, temp_dir)
-        return out_icns
+        target_icns = Path(out_icns).expanduser().resolve()
+        compile_icns(masked_png, str(target_icns), str(t_dir))
+        return str(target_icns)
     finally:
         shutil.rmtree(temp_dir, ignore_errors=True)
