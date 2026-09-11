@@ -1,25 +1,45 @@
 name: Build
 
 on:
-  push:
-    branches: [main]
-  pull_request:
-    branches: [main]
+  workflow_run:
+    workflows: ["Create Release Notes"]
+    types:
+      - completed
 
-concurrency:
-  group: ${{ github.workflow }}-${{ github.ref }}
-  cancel-in-progress: true
+permissions:
+  contents: write
 
 jobs:
   build:
     name: Build (cargo build --release)
     runs-on: macos-latest
+    if: >
+      ${{ github.event.workflow_run.conclusion == 'success' &&
+          contains(github.event.workflow_run.head_commit.message, 'chore(main): release') }}
     steps:
       - name: Checkout repository
         uses: actions/checkout@v7.0.1
+        with:
+          fetch-depth: 0
 
       - name: Install mise and tools
         uses: jdx/mise-action@v4.3.0
 
       - name: Build Release Binary
         run: mise run release
+
+      - name: Package Binary & Generate Checksum
+        run: |
+          TAG=$(git describe --tags --abbrev=0)
+          ARCH=$(uname -m)
+          ARCHIVE="macicon-${TAG}-macos-${ARCH}.tar.gz"
+          tar -czvf "${ARCHIVE}" -C cli/target/release macicon
+          shasum -a 256 "${ARCHIVE}" > "${ARCHIVE}.sha256"
+          echo "ARCHIVE=${ARCHIVE}" >> $GITHUB_ENV
+          echo "TAG=${TAG}" >> $GITHUB_ENV
+
+      - name: Upload Binary to GitHub Release
+        env:
+          GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
+        run: |
+          gh release upload "${TAG}" "${ARCHIVE}" "${ARCHIVE}.sha256" --clobber
