@@ -14,6 +14,9 @@ jobs:
   check-and-test:
     name: Check & Test (${{ matrix.os }})
     runs-on: ${{ matrix.os }}
+    defaults:
+      run:
+        working-directory: cli
     strategy:
       fail-fast: false
       matrix:
