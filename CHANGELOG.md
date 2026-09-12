@@ -1,5 +1,13 @@
 # Changelog
 
+## [0.2.3](https://github.com/DarkRader/macicon/compare/v0.2.2...v0.2.3) (2026-09-12)
+
+
+### ♻️ Updates & Improvements
+
+* **nix:** add prebuilt binary derivation and set MSRV to 1.90.0 ([#31](https://github.com/DarkRader/macicon/issues/31)) ([adad2cd](https://github.com/DarkRader/macicon/commit/adad2cdcd180f14b50c224d5289b06483b113d7e))
+* **release:** update Homebrew formula to v0.2.2 ([e90d8c5](https://github.com/DarkRader/macicon/commit/e90d8c56ea90b2534d70551a630c0787e6a36cde))
+
 ## [0.2.2](https://github.com/DarkRader/macicon/compare/v0.2.1...v0.2.2) (2026-09-12)
 
 
