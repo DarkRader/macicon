@@ -1,5 +1,13 @@
 # Changelog
 
+## [0.2.4](https://github.com/DarkRader/macicon/compare/v0.2.3...v0.2.4) (2026-09-12)
+
+
+### ♻️ Updates & Improvements
+
+* **brew:** remove local Formula and automate release sync to ([8a8e4cd](https://github.com/DarkRader/macicon/commit/8a8e4cdbcfdac254a30a83b6eb40c7f5fb4c9fff))
+* **release:** update Homebrew formula and Nix binary to v0.2.3 ([7384505](https://github.com/DarkRader/macicon/commit/7384505965db6af9c150573a8a503d8982327a58))
+
 ## [0.2.3](https://github.com/DarkRader/macicon/compare/v0.2.2...v0.2.3) (2026-09-12)
 
 
