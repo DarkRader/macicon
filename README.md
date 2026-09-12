@@ -28,7 +28,7 @@ A modern, standalone macOS command-line tool to generate, customize, theme, and 
 Install via Homebrew tap formula:
 
 ```bash
-brew install DarkRader/macicon/macicon
+brew install DarkRader/tap/macicon
 ```
 
 ### Nix / NixOS / nix-darwin

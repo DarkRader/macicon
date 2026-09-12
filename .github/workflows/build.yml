@@ -85,25 +85,14 @@ jobs:
             }
           fi
 
-      - name: Update Homebrew Formula & Nix Binary
+      - name: Update Nix Binary Hash
         run: |
           UNIVERSAL_SHA=$(shasum -a 256 "macicon-${TAG}-macos-universal.tar.gz" | awk '{print $1}')
           python3 -c "
           import re, sys, base64
-          tag = sys.argv[1].lstrip('v')
-          sha = sys.argv[2]
+          sha = sys.argv[1]
           sri = 'sha256-' + base64.b64encode(bytes.fromhex(sha)).decode()
 
-          # Update Formula/macicon.rb
-          formula_path = 'Formula/macicon.rb'
-          with open(formula_path, 'r') as f:
-              fc = f.read()
-          fc = re.sub(r'version \".*\"', f'version \"{tag}\"', fc)
-          fc = re.sub(r'sha256 \".*\"', f'sha256 \"{sha}\"', fc)
-          with open(formula_path, 'w') as f:
-              f.write(fc)
-
-          # Update nix/binary.nix
           nix_path = 'nix/binary.nix'
           try:
               with open(nix_path, 'r') as f:
@@ -113,12 +102,46 @@ jobs:
                   f.write(nc)
           except FileNotFoundError:
               pass
-          " "${TAG}" "${UNIVERSAL_SHA}"
+          " "${UNIVERSAL_SHA}"
 
           git config user.name "github-actions[bot]"
           git config user.email "github-actions[bot]@users.noreply.github.com"
-          git add Formula/macicon.rb nix/binary.nix
+          git add nix/binary.nix
           if ! git diff --staged --quiet; then
-            git commit -m "chore(release): update Homebrew formula and Nix binary to ${TAG}"
+            git commit -m "chore(release): update Nix binary hash to ${TAG}"
             git push origin HEAD:main
+          fi
+
+      - name: Update Homebrew Tap
+        env:
+          TAP_TOKEN: ${{ secrets.HOMEBREW_TAP_TOKEN }}
+        run: |
+          UNIVERSAL_SHA=$(shasum -a 256 "macicon-${TAG}-macos-universal.tar.gz" | awk '{print $1}')
+          if [ -z "${TAP_TOKEN}" ]; then
+            echo "::notice::HOMEBREW_TAP_TOKEN secret is not set, skipping automated homebrew-tap update."
+          else
+            git clone "https://x-access-token:${TAP_TOKEN}@github.com/DarkRader/homebrew-tap.git" tap-repo
+            cd tap-repo
+            python3 -c "
+            import re, sys
+            tag = sys.argv[1].lstrip('v')
+            sha = sys.argv[2]
+            path = 'Formula/macicon.rb'
+            with open(path, 'r') as f:
+                content = f.read()
+            content = re.sub(r'version \".*\"', f'version \"{tag}\"', content)
+            content = re.sub(r'sha256 \".*\"', f'sha256 \"{sha}\"', content)
+            with open(path, 'w') as f:
+                f.write(content)
+            " "${TAG}" "${UNIVERSAL_SHA}"
+
+            git config user.name "github-actions[bot]"
+            git config user.email "github-actions[bot]@users.noreply.github.com"
+            git add Formula/macicon.rb
+            if ! git diff --staged --quiet; then
+              git commit -m "chore(formula): update macicon to ${TAG}"
+              git push origin main
+            fi
+            cd ..
+            rm -rf tap-repo
           fi
