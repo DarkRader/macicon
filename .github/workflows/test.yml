@@ -2,9 +2,9 @@ name: Test
 
 on:
   push:
-    branches: [main]
-  pull_request:
-    branches: [main]
+    branches-ignore:
+      - 'main'
+      - 'release-please--branches--main'
 
 concurrency:
   group: ${{ github.workflow }}-${{ github.ref }}
@@ -48,7 +48,7 @@ jobs:
     runs-on: macos-latest
     steps:
       - name: Checkout repository
-        uses: actions/checkout@v7.0.1 
+        uses: actions/checkout@v7.0.1
 
       - name: Install mise and tools
         uses: jdx/mise-action@v4.3.0
