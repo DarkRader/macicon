@@ -1,5 +1,18 @@
 # Changelog
 
+## [0.2.2](https://github.com/DarkRader/macicon/compare/v0.2.1...v0.2.2) (2026-09-12)
+
+
+### 🐛 Fixes
+
+* **ci:** check secret in run script instead of invalid if expression ([699f679](https://github.com/DarkRader/macicon/commit/699f6792125ce11cbcb1c29684f001d4e1376a15))
+
+
+### ⚙️ DevOps & CI/CD
+
+* **build:** release semver commit for homebrew formula update ([9e328ff](https://github.com/DarkRader/macicon/commit/9e328ff5a31d4b1fdb39eb649f89a31d8db0b5c6))
+* **test:** triggers only on push, ignore main and release branches ([9dd5d3d](https://github.com/DarkRader/macicon/commit/9dd5d3ddf180a805acabb3557ac53febaef3de8a))
+
 ## [0.2.1](https://github.com/DarkRader/macicon/compare/v0.2.0...v0.2.1) (2026-09-12)
 
 
