@@ -11,9 +11,11 @@
       forAllSystems = f: nixpkgs.lib.genAttrs systems (system: f (import nixpkgs { inherit system; }));
     in
     {
-      packages = forAllSystems (pkgs: {
-        default = pkgs.callPackage ./nix/package.nix {};
-        macicon = pkgs.callPackage ./nix/package.nix {};
+      packages = forAllSystems (pkgs: rec {
+        default = if pkgs.stdenv.hostPlatform.isDarwin then binary else source;
+        binary = pkgs.callPackage ./nix/binary.nix {};
+        source = pkgs.callPackage ./nix/package.nix {};
+        macicon = default;
       });
 
       apps = forAllSystems (pkgs: {

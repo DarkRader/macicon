@@ -6,7 +6,7 @@ class Macicon < Formula
   depends_on :macos
 
   url "https://github.com/DarkRader/macicon/releases/download/v#{version}/macicon-v#{version}-macos-universal.tar.gz"
-  sha256 "25eeb0a291280a20a5f15eaaf9507a65562c321fe073c5728e0c5aeca222277d"
+  sha256 "61c50f1a56cb5a068d83cecfb7401dd74a2bbd974ec2763f76af2258382ac559"
 
   def install
     bin.install "macicon"
