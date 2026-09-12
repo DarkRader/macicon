@@ -1,5 +1,17 @@
 # Changelog
 
+## [0.2.1](https://github.com/DarkRader/macicon/compare/v0.2.0...v0.2.1) (2026-09-12)
+
+
+### ♻️ Updates & Improvements
+
+* **formula:** update Homebrew formula to v0.2.0 ([8974eb3](https://github.com/DarkRader/macicon/commit/8974eb3b32157ace6d6a2b52312433ab4df2eb5a))
+
+
+### ⚙️ DevOps & CI/CD
+
+* **release:** add automated crates.io publish step and fix cargo install docs ([#28](https://github.com/DarkRader/macicon/issues/28)) ([c19c808](https://github.com/DarkRader/macicon/commit/c19c8089999130236b2fce31a9bd9491b39f4f58))
+
 ## [0.2.0](https://github.com/DarkRader/macicon/compare/v0.1.1...v0.2.0) (2026-09-11)
 
 
