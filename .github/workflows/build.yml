@@ -73,6 +73,15 @@ jobs:
         run: |
           gh release upload "${TAG}" macicon-*.tar.gz macicon-*.sha256 checksums.txt --clobber
 
+      - name: Publish to crates.io
+        if: ${{ secrets.MACICON_CARGO_REGISTRY_TOKEN != '' }}
+        env:
+          CARGO_REGISTRY_TOKEN: ${{ secrets.MACICON_CARGO_REGISTRY_TOKEN }}
+        run: |
+          mise exec -- cargo publish --manifest-path cli/Cargo.toml || {
+            echo "::warning::cargo publish failed (it may already be published on crates.io)"
+          }
+
       - name: Update Homebrew Formula
         run: |
           UNIVERSAL_SHA=$(shasum -a 256 "macicon-${TAG}-macos-universal.tar.gz" | awk '{print $1}')
