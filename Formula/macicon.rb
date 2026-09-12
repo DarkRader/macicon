@@ -1,12 +1,12 @@
 class Macicon < Formula
   desc "Generate, customize, and apply Apple continuous-curvature squircle app icons on macOS"
   homepage "https://github.com/DarkRader/macicon"
-  version "0.2.0"
+  version "0.2.2"
   license "MIT"
   depends_on :macos
 
   url "https://github.com/DarkRader/macicon/releases/download/v#{version}/macicon-v#{version}-macos-universal.tar.gz"
-  sha256 "5f2f11e8bf3287b8e08358ab1eaa967ee0c3aedd67f9b84dd72ffe7c789c271b"
+  sha256 "25eeb0a291280a20a5f15eaaf9507a65562c321fe073c5728e0c5aeca222277d"
 
   def install
     bin.install "macicon"
