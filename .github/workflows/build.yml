@@ -85,26 +85,40 @@ jobs:
             }
           fi
 
-      - name: Update Homebrew Formula
+      - name: Update Homebrew Formula & Nix Binary
         run: |
           UNIVERSAL_SHA=$(shasum -a 256 "macicon-${TAG}-macos-universal.tar.gz" | awk '{print $1}')
           python3 -c "
-          import re, sys
+          import re, sys, base64
           tag = sys.argv[1].lstrip('v')
           sha = sys.argv[2]
-          path = 'Formula/macicon.rb'
-          with open(path, 'r') as f:
-              content = f.read()
-          content = re.sub(r'version \".*\"', f'version \"{tag}\"', content)
-          content = re.sub(r'sha256 \".*\"', f'sha256 \"{sha}\"', content)
-          with open(path, 'w') as f:
-              f.write(content)
+          sri = 'sha256-' + base64.b64encode(bytes.fromhex(sha)).decode()
+
+          # Update Formula/macicon.rb
+          formula_path = 'Formula/macicon.rb'
+          with open(formula_path, 'r') as f:
+              fc = f.read()
+          fc = re.sub(r'version \".*\"', f'version \"{tag}\"', fc)
+          fc = re.sub(r'sha256 \".*\"', f'sha256 \"{sha}\"', fc)
+          with open(formula_path, 'w') as f:
+              f.write(fc)
+
+          # Update nix/binary.nix
+          nix_path = 'nix/binary.nix'
+          try:
+              with open(nix_path, 'r') as f:
+                  nc = f.read()
+              nc = re.sub(r'hash = \".*\"', f'hash = \"{sri}\"', nc)
+              with open(nix_path, 'w') as f:
+                  f.write(nc)
+          except FileNotFoundError:
+              pass
           " "${TAG}" "${UNIVERSAL_SHA}"
 
           git config user.name "github-actions[bot]"
           git config user.email "github-actions[bot]@users.noreply.github.com"
-          git add Formula/macicon.rb
+          git add Formula/macicon.rb nix/binary.nix
           if ! git diff --staged --quiet; then
-            git commit -m "chore(release): update Homebrew formula to ${TAG}"
+            git commit -m "chore(release): update Homebrew formula and Nix binary to ${TAG}"
             git push origin HEAD:main
           fi
