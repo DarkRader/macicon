@@ -156,6 +156,31 @@ mod tests {
     fn test_resolve_symbol_color() {
         assert_eq!(resolve_symbol_color("black"), "#202022");
         assert_eq!(resolve_symbol_color("apple"), "#00C8FF,#0072FE");
+        assert_eq!(resolve_symbol_color("  BLUE  "), "#007AFF");
         assert_eq!(resolve_symbol_color("#123456"), "#123456");
+    }
+
+    #[test]
+    fn test_color_shortcuts_coverage() {
+        for (shortcut, (top, bottom)) in COLOR_SHORTCUTS {
+            let (res_top, res_btm) = resolve_background_colors(shortcut);
+            assert_eq!(&res_top, top);
+            assert_eq!(&res_btm, bottom);
+        }
+    }
+
+    #[test]
+    fn test_symbol_shortcuts_coverage() {
+        for (shortcut, target) in SYMBOL_SHORTCUTS {
+            let res = resolve_symbol_color(shortcut);
+            assert_eq!(&res, target);
+        }
+    }
+
+    #[test]
+    fn test_calculate_luminance_invalid() {
+        assert!(calculate_luminance("invalid_hex").is_none());
+        assert!(calculate_luminance("#12").is_none());
+        assert!(calculate_luminance("#1234567").is_none());
     }
 }

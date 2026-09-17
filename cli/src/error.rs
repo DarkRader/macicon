@@ -151,3 +151,64 @@ impl From<serde_json::Error> for InfraError {
         InfraError::Json(err)
     }
 }
+
+#[cfg(test)]
+mod tests {
+    use super::*;
+
+    #[test]
+    fn test_domain_error_display() {
+        let err = DomainError::InvalidHexColor("xyz".to_string());
+        assert_eq!(err.to_string(), "Invalid hex color: 'xyz'");
+
+        let err_geom = DomainError::InvalidGeometry("out of bounds".to_string());
+        assert_eq!(err_geom.to_string(), "Invalid geometry: out of bounds");
+
+        let err_theme = DomainError::InvalidTheme("matrix".to_string());
+        assert_eq!(err_theme.to_string(), "Invalid theme: 'matrix'");
+
+        let err_icon = DomainError::InvalidIcon("empty path".to_string());
+        assert_eq!(err_icon.to_string(), "Invalid icon: empty path");
+    }
+
+    #[test]
+    fn test_infra_error_display_and_source() {
+        let io_err = io::Error::new(io::ErrorKind::NotFound, "file not found");
+        let infra_err: InfraError = io_err.into();
+        assert!(infra_err.to_string().contains("file not found"));
+        assert!(std::error::Error::source(&infra_err).is_some());
+
+        let net_err = InfraError::Network("timeout".to_string());
+        assert_eq!(net_err.to_string(), "Network error: timeout");
+
+        let tool_err = InfraError::ToolExecution {
+            tool: "sips".to_string(),
+            message: "corrupt file".to_string(),
+        };
+        assert_eq!(tool_err.to_string(), "Tool 'sips' failed: corrupt file");
+
+        let app_err = InfraError::AppBundleNotFound("Slack".to_string());
+        assert_eq!(app_err.to_string(), "Target app 'Slack' does not exist.");
+
+        let icon_err = InfraError::IconFileNotFound("app.icns".to_string());
+        assert_eq!(icon_err.to_string(), "Icon file 'app.icns' does not exist.");
+    }
+
+    #[test]
+    fn test_mac_icon_error_conversions() {
+        let domain_err = DomainError::InvalidHexColor("#bad".to_string());
+        let mac_err: MacIconError = domain_err.into();
+        assert_eq!(mac_err.to_string(), "Invalid hex color: '#bad'");
+
+        let io_err = io::Error::new(io::ErrorKind::PermissionDenied, "denied");
+        let mac_err_io: MacIconError = io_err.into();
+        assert!(mac_err_io.to_string().contains("denied"));
+
+        let not_found = MacIconError::NotFound {
+            query: "unknown_app".to_string(),
+            details: "check spelling".to_string(),
+        };
+        assert!(not_found.to_string().contains("unknown_app"));
+        assert!(not_found.to_string().contains("check spelling"));
+    }
+}

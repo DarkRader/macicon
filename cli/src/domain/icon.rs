@@ -164,5 +164,36 @@ mod tests {
         let (slug2, candidates2) = derive_candidate_slugs("Zed");
         assert_eq!(slug2, "zed");
         assert!(candidates2.contains(&"zedindustries".to_string()));
+
+        let (_, candidates3) = derive_candidate_slugs("gemini");
+        assert!(candidates3.contains(&"googlegemini".to_string()));
+        assert!(candidates3.contains(&"gemini-app".to_string()));
+    }
+
+    #[test]
+    fn test_all_known_icons_valid() {
+        for (key, icon) in KNOWN_ICONS {
+            let found = find_known_icon(key);
+            assert!(found.is_some());
+            assert_eq!(found.unwrap().name(), icon.name);
+        }
+        assert!(find_known_icon("completely_nonexistent_icon").is_none());
+    }
+
+    #[test]
+    fn test_icon_info_name() {
+        let letter = IconInfo::Letter {
+            name: "letter-a".to_string(),
+            letter: "A".to_string(),
+        };
+        assert_eq!(letter.name(), "letter-a");
+
+        let path = IconInfo::Path {
+            name: "slack".to_string(),
+            path_d: "M0 0".to_string(),
+            viewbox: "0 0 24 24".to_string(),
+            fill_rule: "evenodd".to_string(),
+        };
+        assert_eq!(path.name(), "slack");
     }
 }

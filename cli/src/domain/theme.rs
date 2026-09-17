@@ -255,4 +255,38 @@ mod tests {
         assert_eq!(style.border, "#28282C");
         assert_eq!(style.symbol_color, "#FFFFFF");
     }
+
+    #[test]
+    fn test_find_preset() {
+        assert!(find_preset("light").is_some());
+        assert!(find_preset("dracula").is_some());
+        assert!(find_preset("catppuccin").is_some());
+        assert!(find_preset("unknown_preset").is_none());
+    }
+
+    #[test]
+    fn test_compute_styling_flat_bg_border() {
+        let style = compute_styling("light", Some("#AABBCC"), None, None);
+        assert_eq!(style.bg_top, "#AABBCC");
+        assert_eq!(style.bg_bottom, "#AABBCC");
+        assert_eq!(style.border, "#AABBCC");
+    }
+
+    #[test]
+    fn test_compute_styling_dark_generic_border() {
+        // Dark color that is not #161618 or #000000 -> should get #3A3B40 border
+        let style = compute_styling("light", Some("#202020,#101010"), None, None);
+        assert_eq!(style.border, "#3A3B40");
+    }
+
+    #[test]
+    fn test_theme_config_serde_defaults() {
+        let json = "{\"bg_top\":\"white\",\"bg_bottom\":\"light\",\"border\":\"gray\",\"symbol_color\":\"black\"}";
+        let parsed: ThemeConfig = serde_json::from_str(json).unwrap();
+        assert!(parsed.shadow);
+        assert_eq!(parsed.scale, 1.25);
+
+        let serialized = serde_json::to_string(&parsed).unwrap();
+        assert!(serialized.contains("\"shadow\":true"));
+    }
 }

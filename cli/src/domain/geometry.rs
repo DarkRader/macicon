@@ -105,5 +105,30 @@ mod tests {
         let double = calculate_lettermark_metrics("AI", 1.0);
         assert_eq!(double.font_size, 280);
         assert_eq!(double.y_pos, 600);
+
+        let triple = calculate_lettermark_metrics("ABC", 0.5);
+        assert_eq!(triple.font_size, 140);
+        assert_eq!(triple.y_pos, 600);
+    }
+
+    #[test]
+    fn test_rectangular_symbol_transform() {
+        // Wide aspect ratio
+        let wide = calculate_symbol_transform(10.0, 20.0, 100.0, 50.0, 1.0);
+        assert_eq!(wide.center_x, 60.0);
+        assert_eq!(wide.center_y, 45.0);
+        assert_eq!(wide.scale, 480.0 / 100.0);
+
+        // Tall aspect ratio
+        let tall = calculate_symbol_transform(0.0, 0.0, 30.0, 60.0, 2.0);
+        assert_eq!(tall.center_x, 15.0);
+        assert_eq!(tall.center_y, 30.0);
+        assert_eq!(tall.scale, (480.0 / 60.0) * 2.0);
+    }
+
+    #[test]
+    fn test_zero_dimension_protection() {
+        let zero = calculate_symbol_transform(0.0, 0.0, 0.0, 0.0, 1.0);
+        assert_eq!(zero.scale, 480.0); // max_dim defaults to 1.0
     }
 }

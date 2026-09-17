@@ -395,3 +395,58 @@ pub fn sync_themes_workflow(icons_dir: Option<&str>) -> Result<(), MacIconError>
     println!("\n✨ All themes are now synchronized!\n");
     Ok(())
 }
+
+#[cfg(test)]
+mod tests {
+    use super::*;
+    use tempfile::tempdir;
+
+    #[test]
+    fn test_get_icons_base_dir() {
+        assert_eq!(
+            get_icons_base_dir(Some("/custom/path")),
+            PathBuf::from("/custom/path")
+        );
+        let default_dir = get_icons_base_dir(None);
+        assert!(default_dir == Path::new("icons") || default_dir == Path::new("nix/icons"));
+    }
+
+    #[test]
+    fn test_save_and_load_themes_manifest() {
+        let tmp = tempdir().unwrap();
+        let manifest_path = tmp.path().join("themes.json");
+
+        let mut sample_themes = HashMap::new();
+        sample_themes.insert(
+            "custom".to_string(),
+            ThemeConfig {
+                bg_top: "#111111".to_string(),
+                bg_bottom: "#222222".to_string(),
+                border: "#333333".to_string(),
+                symbol_color: "#FFFFFF".to_string(),
+                shadow: true,
+                scale: 1.3,
+            },
+        );
+
+        save_themes_manifest(&manifest_path, &sample_themes).unwrap();
+        assert!(manifest_path.is_file());
+
+        let loaded = load_themes_manifest(&manifest_path, tmp.path());
+        assert_eq!(loaded.len(), 1);
+        assert_eq!(loaded.get("custom").unwrap().bg_top, "#111111");
+        assert_eq!(loaded.get("custom").unwrap().scale, 1.3);
+    }
+
+    #[test]
+    fn test_load_themes_manifest_with_directory_defaults() {
+        let tmp = tempdir().unwrap();
+        let light_dir = tmp.path().join("light");
+        fs::create_dir_all(&light_dir).unwrap();
+
+        let manifest_path = tmp.path().join("non_existent_themes.json");
+        let loaded = load_themes_manifest(&manifest_path, tmp.path());
+        assert!(loaded.contains_key("light"));
+        assert_eq!(loaded.get("light").unwrap().bg_top, "#FFFFFF");
+    }
+}

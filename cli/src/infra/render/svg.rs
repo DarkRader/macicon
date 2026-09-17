@@ -245,4 +245,33 @@ mod tests {
         assert_eq!(vb, "0 0 48 48");
         assert_eq!(fr, "evenodd");
     }
+
+    #[test]
+    fn test_build_svg_gradient_symbol_and_no_shadow() {
+        let style = IconStyle {
+            bg_top: "#FFFFFF".to_string(),
+            bg_bottom: "#000000".to_string(),
+            border: "#CCCCCC".to_string(),
+            symbol_color: "#00C8FF,#0072FE".to_string(),
+        };
+        let svg = build_svg("M0 0", "0 0 24 24", &style, 1.0, "nonzero", false);
+        assert!(svg.contains("id=\"symbol-grad\""));
+        assert!(svg.contains("fill=\"url(#symbol-grad)\""));
+        assert!(!svg.contains("filter=\"url(#symbol-shadow)\""));
+    }
+
+    #[test]
+    fn test_extract_path_width_height_fallback() {
+        let svg = r#"<svg width="64" height="64"><path d="M5 5"/></svg>"#;
+        let (path_d, vb, _) = extract_path_from_svg(svg).unwrap();
+        assert_eq!(path_d, "M5 5");
+        assert_eq!(vb, "0 0 64 64");
+    }
+
+    #[test]
+    fn test_extract_path_no_paths_error() {
+        let svg = r#"<svg viewBox="0 0 24 24"><circle cx="12" cy="12" r="10"/></svg>"#;
+        let err = extract_path_from_svg(svg).unwrap_err();
+        assert!(err.to_string().contains("No <path d=\"...\"> found"));
+    }
 }

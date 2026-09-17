@@ -102,3 +102,86 @@ pub struct Cli {
     #[arg(long)]
     pub no_dock_restart: bool,
 }
+
+#[cfg(test)]
+mod tests {
+    use super::*;
+
+    #[test]
+    fn test_parse_positional_query() {
+        let args = Cli::try_parse_from(["macicon", "slack"]).unwrap();
+        assert_eq!(args.query.as_deref(), Some("slack"));
+        assert_eq!(args.theme, "light");
+        assert_eq!(args.scale, 1.25);
+        assert!(!args.no_shadow);
+        assert_eq!(args.viewbox, "0 0 24 24");
+    }
+
+    #[test]
+    fn test_parse_flags() {
+        let args = Cli::try_parse_from([
+            "macicon",
+            "-q",
+            "warp",
+            "-t",
+            "dark",
+            "-b",
+            "black",
+            "-c",
+            "white",
+            "--border-color",
+            "#444444",
+            "--no-shadow",
+            "--scale",
+            "1.5",
+            "-o",
+            "/tmp/out.icns",
+            "-a",
+            "Warp",
+            "--no-dock-restart",
+        ])
+        .unwrap();
+
+        assert_eq!(args.search_query.as_deref(), Some("warp"));
+        assert_eq!(args.theme, "dark");
+        assert_eq!(args.bg.as_deref(), Some("black"));
+        assert_eq!(args.color.as_deref(), Some("white"));
+        assert_eq!(args.border_color.as_deref(), Some("#444444"));
+        assert!(args.no_shadow);
+        assert_eq!(args.scale, 1.5);
+        assert_eq!(args.out.as_deref(), Some("/tmp/out.icns"));
+        assert_eq!(args.apply.as_deref(), Some("Warp"));
+        assert!(args.no_dock_restart);
+    }
+
+    #[test]
+    fn test_parse_theme_commands() {
+        let args = Cli::try_parse_from([
+            "macicon",
+            "--create-theme",
+            "mytheme",
+            "--from-theme",
+            "nord",
+            "--icons-dir",
+            "custom/icons",
+        ])
+        .unwrap();
+
+        assert_eq!(args.create_theme.as_deref(), Some("mytheme"));
+        assert_eq!(args.from_theme, "nord");
+        assert_eq!(args.icons_dir.as_deref(), Some("custom/icons"));
+    }
+
+    #[test]
+    fn test_parse_preview_flag() {
+        let args = Cli::try_parse_from(["macicon", "slack", "--preview"]).unwrap();
+        assert_eq!(args.preview, Some(None));
+
+        let args_custom =
+            Cli::try_parse_from(["macicon", "slack", "--preview", "/tmp/slack.png"]).unwrap();
+        assert_eq!(
+            args_custom.preview,
+            Some(Some("/tmp/slack.png".to_string()))
+        );
+    }
+}
