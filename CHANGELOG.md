@@ -1,5 +1,17 @@
 # Changelog
 
+## [0.3.0](https://github.com/DarkRader/macicon/compare/v0.2.4...v0.3.0) (2026-09-17)
+
+
+### ✨ New Features
+
+* **arch:** restructure src architecture following clean code and domain-driven design principles ([#34](https://github.com/DarkRader/macicon/issues/34)) ([161f020](https://github.com/DarkRader/macicon/commit/161f0204a2834c78fd908ff4c4d28263cafdea35))
+
+
+### ♻️ Updates & Improvements
+
+* **release:** update Nix binary hash to v0.2.4 ([4a5d868](https://github.com/DarkRader/macicon/commit/4a5d868df750023cf00eee53d4ca9d49fa755dbd))
+
 ## [0.2.4](https://github.com/DarkRader/macicon/compare/v0.2.3...v0.2.4) (2026-09-12)
 
 
