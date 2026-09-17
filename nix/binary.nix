@@ -10,7 +10,7 @@ pkgs.stdenv.mkDerivation {
 
   src = pkgs.fetchurl {
     url = "https://github.com/DarkRader/macicon/releases/download/v${version}/macicon-v${version}-macos-universal.tar.gz";
-    hash = "sha256-M1WJ3fhDNehvoioC4h0D0/2um8M9Zgcn/GOULJV3PnQ=";
+    hash = "sha256-lGoqSegOP1un15ry3GOtoLxTC6R2PhgdWCskVXYx6As=";
   };
 
   sourceRoot = ".";
