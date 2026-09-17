@@ -1,12 +1,7 @@
-//! Constants and built-in vector assets for macicon.
+//! Icon domain models, built-in vector catalog, and slug normalization for macicon.
 
-pub const CANVAS_SIZE: u32 = 1024;
-pub const TILE_SIZE: u32 = 832;
-pub const TILE_X: u32 = 96;
-pub const TILE_Y: u32 = 88;
-pub const CORNER_RADIUS: u32 = 185;
-pub const DEFAULT_SYMBOL_SIZE: f64 = 480.0;
-
+/// Built-in vector definition with embedded SVG path data.
+#[derive(Debug, Clone, Copy)]
 pub struct KnownIcon {
     pub name: &'static str,
     pub path_d: &'static str,
@@ -14,6 +9,7 @@ pub struct KnownIcon {
     pub fill_rule: &'static str,
 }
 
+/// Catalog of pre-bundled icons for offline generation.
 pub const KNOWN_ICONS: &[(&str, KnownIcon)] = &[
     (
         "spark",
@@ -44,6 +40,7 @@ pub const KNOWN_ICONS: &[(&str, KnownIcon)] = &[
     ),
 ];
 
+/// Known name aliases mapping common user input strings to exact vector slugs.
 pub const COMMON_ALIASES: &[(&str, &str)] = &[
     ("zed", "zedindustries"),
     ("gemini", "googlegemini"),
@@ -59,3 +56,113 @@ pub const COMMON_ALIASES: &[(&str, &str)] = &[
     ("system-preferences", "systemsettings"),
     ("preferences", "systemsettings"),
 ];
+
+/// Domain entity representing the resolved vector or lettermark symbol content.
+#[derive(Debug, Clone, PartialEq, Eq)]
+pub enum IconInfo {
+    /// Vector path definition.
+    Path {
+        name: String,
+        path_d: String,
+        viewbox: String,
+        fill_rule: String,
+    },
+    /// Typography monogram lettermark.
+    Letter { name: String, letter: String },
+}
+
+impl IconInfo {
+    /// Return the canonical identifier/name for this icon.
+    pub fn name(&self) -> &str {
+        match self {
+            IconInfo::Path { name, .. } => name,
+            IconInfo::Letter { name, .. } => name,
+        }
+    }
+}
+
+/// Find a built-in pre-bundled icon by its exact name or alias.
+pub fn find_known_icon(slug: &str) -> Option<IconInfo> {
+    KNOWN_ICONS
+        .iter()
+        .find(|(k, _)| *k == slug)
+        .map(|(_, icon)| IconInfo::Path {
+            name: icon.name.to_string(),
+            path_d: icon.path_d.to_string(),
+            viewbox: icon.viewbox.to_string(),
+            fill_rule: icon.fill_rule.to_string(),
+        })
+}
+
+/// Derive candidate slugs from a query string for online icon searches.
+pub fn derive_candidate_slugs(query_str: &str) -> (String, Vec<String>) {
+    let mut slug = query_str.to_lowercase().replace([' ', '-', '_'], "");
+    let slug_hyphen = query_str.to_lowercase().replace([' ', '_'], "-");
+
+    if let Some(&(_, alias)) = COMMON_ALIASES.iter().find(|(k, _)| *k == slug)
+        && KNOWN_ICONS.iter().any(|(k, _)| *k == alias)
+    {
+        slug = alias.to_string();
+    } else if let Some(&(_, alias)) = COMMON_ALIASES.iter().find(|(k, _)| *k == slug_hyphen)
+        && KNOWN_ICONS.iter().any(|(k, _)| *k == alias)
+    {
+        slug = alias.to_string();
+    }
+
+    let mut candidate_slugs = vec![slug.clone()];
+    if !candidate_slugs.contains(&slug_hyphen) {
+        candidate_slugs.push(slug_hyphen.clone());
+    }
+    if let Some(&(_, alias)) = COMMON_ALIASES.iter().find(|(k, _)| *k == slug) {
+        let s = alias.to_string();
+        if !candidate_slugs.contains(&s) {
+            candidate_slugs.push(s);
+        }
+    }
+    if let Some(&(_, alias)) = COMMON_ALIASES.iter().find(|(k, _)| *k == slug_hyphen) {
+        let s = alias.to_string();
+        if !candidate_slugs.contains(&s) {
+            candidate_slugs.push(s);
+        }
+    }
+
+    for suffix in ["industries", "editor", "app"] {
+        let s = format!("{}{}", slug, suffix);
+        if !candidate_slugs.contains(&s) {
+            candidate_slugs.push(s);
+        }
+    }
+    let s_hyphen = format!("{}-app", slug_hyphen);
+    if !candidate_slugs.contains(&s_hyphen) {
+        candidate_slugs.push(s_hyphen);
+    }
+
+    (slug, candidate_slugs)
+}
+
+#[cfg(test)]
+mod tests {
+    use super::*;
+
+    #[test]
+    fn test_known_icons_lookup() {
+        let spark = find_known_icon("spark");
+        assert!(spark.is_some());
+        assert_eq!(spark.unwrap().name(), "spark");
+
+        let notion = find_known_icon("notioncalendar");
+        assert!(notion.is_some());
+        assert_eq!(notion.unwrap().name(), "notion-calendar");
+    }
+
+    #[test]
+    fn test_derive_candidate_slugs() {
+        let (slug, candidates) = derive_candidate_slugs("VS Code");
+        assert_eq!(slug, "vscode");
+        assert!(candidates.contains(&"visualstudiocode".to_string()));
+
+        let (slug2, candidates2) = derive_candidate_slugs("Zed");
+        assert_eq!(slug2, "zed");
+        assert!(candidates2.contains(&"zedindustries".to_string()));
+    }
+}
