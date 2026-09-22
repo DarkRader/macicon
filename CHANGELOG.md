@@ -1,5 +1,18 @@
 # Changelog
 
+## [0.3.1](https://github.com/DarkRader/macicon/compare/v0.3.0...v0.3.1) (2026-09-22)
+
+
+### ♻️ Updates & Improvements
+
+* **release:** update Nix binary hash to v0.3.0 ([89464ea](https://github.com/DarkRader/macicon/commit/89464ea74e515332fef7a5c4856fec333db4be61))
+
+
+### 🐛 Fixes
+
+* **deps:** update rust crate clap to v4.6.7 ([#38](https://github.com/DarkRader/macicon/issues/38)) ([63fd9c4](https://github.com/DarkRader/macicon/commit/63fd9c46696387a4c1c81cffe9fa20bb339d2a0a))
+* **deps:** update rust crate ureq to v3.4.2 ([#36](https://github.com/DarkRader/macicon/issues/36)) ([7428bcc](https://github.com/DarkRader/macicon/commit/7428bccd71dfcac17411becdc2626878a781506d))
+
 ## [0.3.0](https://github.com/DarkRader/macicon/compare/v0.2.4...v0.3.0) (2026-09-17)
 
 
