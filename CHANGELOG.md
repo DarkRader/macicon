@@ -1,5 +1,23 @@
 # Changelog
 
+## [0.3.2](https://github.com/DarkRader/macicon/compare/v0.3.1...v0.3.2) (2026-11-28)
+
+
+### ♻️ Updates & Improvements
+
+* **deps:** update rust to v1.99.1 ([#45](https://github.com/DarkRader/macicon/issues/45)) ([c70d9ef](https://github.com/DarkRader/macicon/commit/c70d9efdd1505a1ea8d8c03076eff6d026334b02))
+* **release:** update Nix binary hash to v0.3.1 ([d3160ac](https://github.com/DarkRader/macicon/commit/d3160ace3b9a2a48a72a7ed7a80943981e408119))
+
+
+### 🐛 Fixes
+
+* **deps:** update rust crate clap to v4.6.8 ([#48](https://github.com/DarkRader/macicon/issues/48)) ([0d66e13](https://github.com/DarkRader/macicon/commit/0d66e1397b9dde684c2e5939cdd8d2f007304ddb))
+* **deps:** update rust crate clap to v4.6.9 ([#50](https://github.com/DarkRader/macicon/issues/50)) ([f433a32](https://github.com/DarkRader/macicon/commit/f433a32a2488a1d05a2003e1bcdaece2efec0700))
+* **deps:** update rust crate regex to v1.13.2 ([#49](https://github.com/DarkRader/macicon/issues/49)) ([f5d2882](https://github.com/DarkRader/macicon/commit/f5d28826557e65f0ff485030a2cd30b62271e82c))
+* **deps:** update rust crate serde_json to v1.0.152 ([#42](https://github.com/DarkRader/macicon/issues/42)) ([a5e201b](https://github.com/DarkRader/macicon/commit/a5e201beb9074479f9011137b03a1912a8a10d6d))
+* **deps:** update rust crate serde_json to v1.0.154 ([#44](https://github.com/DarkRader/macicon/issues/44)) ([abec48e](https://github.com/DarkRader/macicon/commit/abec48e3ad9778474da033fbebee2ef902ebd949))
+* **deps:** update rust crate url to v2.5.9 ([#51](https://github.com/DarkRader/macicon/issues/51)) ([93eb698](https://github.com/DarkRader/macicon/commit/93eb698751f2a7ed648f2bef385c0f1df77991b0))
+
 ## [0.3.1](https://github.com/DarkRader/macicon/compare/v0.3.0...v0.3.1) (2026-10-10)
 
 
